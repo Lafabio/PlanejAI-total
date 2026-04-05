@@ -1,0 +1,1540 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema de Planejamento BNCC — Prof. Lafaiete Erkmann</title>
+<script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0f1923;--paper:#fafaf7;--cream:#f0ede3;--border:#ccc8b8;
+  --accent:#1a5276;--accent2:#1e8449;--accent3:#c0392b;
+  --shadow:0 2px 16px rgba(15,25,35,.10);--radius:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#e8e5db;background-image:repeating-linear-gradient(0deg,transparent,transparent 27px,rgba(0,0,0,.025) 28px);font-family:'Sora',sans-serif;color:var(--ink);min-height:100vh;}
+.nav{background:var(--accent);color:#fff;display:flex;align-items:center;gap:16px;padding:0 24px;height:54px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.2);}
+.nav-logo{font-weight:700;font-size:.95rem;letter-spacing:.03em;white-space:nowrap;}
+.nav-steps{display:flex;gap:3px;margin-left:auto;overflow-x:auto;}
+.nav-step{padding:5px 12px;border-radius:20px;font-size:.75rem;font-weight:600;cursor:pointer;border:2px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);transition:all .2s;white-space:nowrap;}
+.nav-step.active,.nav-step:hover{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.7);color:#fff;}
+.nav-step.done{border-color:#27ae60;color:#90EE90;}
+.pw{max-width:1060px;margin:0 auto;padding:24px 18px 60px;}
+.page{display:none;} .page.active{display:block;}
+.progress-bar{height:4px;background:#ddd;border-radius:3px;overflow:hidden;margin-bottom:18px;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px;transition:width .4s;}
+.card{background:var(--paper);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border);padding:24px 28px;margin-bottom:18px;}
+.card-title{font-size:1.05rem;font-weight:700;color:var(--accent);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.badge{background:var(--accent);color:#fff;border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;font-size:.78rem;flex-shrink:0;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px;}
+.form-row.full{grid-template-columns:1fr;}
+.form-row.three{grid-template-columns:1fr 1fr 1fr;}
+.field{display:flex;flex-direction:column;gap:4px;}
+.field label{font-size:.77rem;font-weight:700;color:#5a5240;text-transform:uppercase;letter-spacing:.04em;}
+.field input,.field select,.field textarea{font-family:'Sora',sans-serif;font-size:.88rem;color:var(--ink);background:#fff;border:1.5px solid var(--border);border-radius:5px;padding:8px 11px;outline:none;transition:border-color .2s,box-shadow .2s;width:100%;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(26,82,118,.1);}
+.field textarea{resize:vertical;min-height:72px;line-height:1.6;}
+.field select{cursor:pointer;}
+
+/* ===== SKILL SELECTOR ===== */
+.skill-selector-wrap{position:relative;}
+.skill-search{width:100%;font-family:'Sora',sans-serif;font-size:.9rem;padding:10px 14px;border:2px solid var(--border);border-radius:6px;outline:none;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat 12px center;padding-left:36px;}
+.skill-search:focus{border-color:var(--accent);}
+.skill-dropdown{display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1.5px solid var(--border);border-radius:6px;max-height:320px;overflow-y:auto;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.12);}
+.skill-dropdown.open{display:block;}
+.skill-group-header{padding:8px 14px 4px;font-size:.72rem;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.06em;background:#f5f5f2;border-bottom:1px solid #eee;position:sticky;top:0;}
+.skill-option{padding:10px 14px;cursor:pointer;border-bottom:1px solid #f0ede8;transition:background .15s;}
+.skill-option:hover,.skill-option.focused{background:#eef4fb;}
+.skill-option .skill-cod{font-weight:700;font-size:.82rem;color:var(--accent);font-family:monospace;margin-right:8px;}
+.skill-option .skill-verb{font-size:.78rem;background:#fde8e8;color:#c0392b;border-radius:10px;padding:1px 7px;margin-right:6px;font-weight:700;}
+.skill-option .skill-preview{font-size:.8rem;color:#555;display:block;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.skill-option .bloom-badge{font-size:.72rem;font-weight:700;padding:2px 7px;border-radius:10px;float:right;}
+.selected-skill-card{background:#f0f7ff;border:2px solid var(--accent);border-radius:8px;padding:14px 16px;margin-top:12px;}
+.selected-skill-card .sc-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+.sc-cod{font-family:monospace;font-weight:700;font-size:.95rem;color:var(--accent);}
+.sc-comp{font-size:.8rem;color:#666;background:#e8edf2;padding:3px 10px;border-radius:10px;}
+.selected-skill-card .sc-texto{font-family:'Source Serif 4',serif;font-size:.92rem;line-height:1.75;color:var(--ink);}
+.verb-hl{background:#fde8e8;color:#c0392b;font-weight:700;border-radius:3px;padding:1px 4px;}
+.obj-hl{background:#e8f2fb;color:#1a5276;border-radius:3px;padding:1px 4px;}
+.purp-hl{background:#e8f8ee;color:#1e8449;border-radius:3px;padding:1px 4px;}
+
+/* ===== DISSECTION GRID ===== */
+.dissect-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:12px;}
+.dc{background:#fff;border-radius:6px;padding:12px 14px;border-left:4px solid;}
+.dc.verb{border-color:#c0392b;} .dc.obj{border-color:#2980b9;} .dc.purp{border-color:#27ae60;}
+.dc h4{font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;}
+.dc.verb h4{color:#c0392b;} .dc.obj h4{color:#2980b9;} .dc.purp h4{color:#27ae60;}
+.dc p{font-size:.83rem;color:#444;line-height:1.5;}
+
+/* ===== BLOOM ===== */
+.bloom-badge-lg{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:20px;font-weight:700;font-size:.88rem;margin-top:12px;}
+.bl1-bg{background:#e0f5f2;color:#16a085;border:2px solid #a2d9d1;}
+.bl2-bg{background:#f0eafa;color:#8e44ad;border:2px solid #d7bde2;}
+.bl3-bg{background:#e8f2fb;color:#2980b9;border:2px solid #aed6f1;}
+.bl4-bg{background:#e8f8ee;color:#27ae60;border:2px solid #a9dfbf;}
+.bl5-bg{background:#fef0e0;color:#e67e22;border:2px solid #f5cba7;}
+.bl6-bg{background:#fde8e8;color:#c0392b;border:2px solid #f5b7b1;}
+.bloom-mini{padding:2px 8px;border-radius:8px;font-size:.74rem;font-weight:700;}
+.b1{background:#e0f5f2;color:#16a085;} .b2{background:#f0eafa;color:#8e44ad;}
+.b3{background:#e8f2fb;color:#2980b9;} .b4{background:#e8f8ee;color:#27ae60;}
+.b5{background:#fef0e0;color:#e67e22;} .b6{background:#fde8e8;color:#c0392b;}
+
+/* ===== BLOOM PYRAMID ===== */
+.bloom-levels{display:flex;flex-direction:column;gap:4px;margin-top:6px;}
+.bloom-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:all .15s;}
+.bloom-row:hover{transform:translateX(3px);}
+.bloom-row.selected{border-color:currentColor;box-shadow:0 2px 8px rgba(0,0,0,.1);}
+.bloom-row .br-num{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.78rem;color:#fff;flex-shrink:0;}
+.bloom-row .br-name{font-weight:700;font-size:.84rem;width:110px;flex-shrink:0;}
+.bloom-row .br-desc{font-size:.79rem;color:#666;flex:1;}
+.bloom-row .br-verbs{font-size:.72rem;font-style:italic;color:#999;margin-left:auto;text-align:right;max-width:180px;}
+.bl6-r{background:#fde8e8;color:#c0392b;} .bl6-r .br-num{background:#c0392b;}
+.bl5-r{background:#fef0e0;color:#e67e22;} .bl5-r .br-num{background:#e67e22;}
+.bl4-r{background:#e8f8ee;color:#27ae60;} .bl4-r .br-num{background:#27ae60;}
+.bl3-r{background:#e8f2fb;color:#2980b9;} .bl3-r .br-num{background:#2980b9;}
+.bl2-r{background:#f0eafa;color:#8e44ad;} .bl2-r .br-num{background:#8e44ad;}
+.bl1-r{background:#e0f5f2;color:#16a085;} .bl1-r .br-num{background:#16a085;}
+
+/* ===== AREA CHIPS ===== */
+.area-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;}
+.area-chip{padding:9px 13px;border-radius:6px;border:2px solid var(--border);background:#fff;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:7px;}
+.area-chip:hover{border-color:var(--accent);transform:translateY(-2px);}
+.area-chip.selected{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+/* ===== METHODS ===== */
+.method-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:8px;}
+.method-chip{padding:9px 13px;border-radius:6px;border:2px solid var(--border);background:#fff;font-size:.8rem;font-weight:600;cursor:pointer;text-align:center;transition:all .18s;color:#555;}
+.method-chip:hover{border-color:var(--accent);color:var(--accent);}
+.method-chip.selected{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+/* ===== CRITERIA ===== */
+.criteria-list{display:flex;flex-direction:column;gap:7px;}
+.criteria-item{display:flex;gap:9px;align-items:center;background:#fff;border:1.5px solid var(--border);border-radius:6px;padding:9px 12px;}
+.criteria-item input{flex:1;border:none;border-bottom:1px dashed var(--border);outline:none;font-family:'Sora',sans-serif;font-size:.85rem;padding:2px 5px;background:transparent;}
+.criteria-item input:focus{border-color:var(--accent);}
+.del-btn{background:none;border:none;color:#c0392b;cursor:pointer;font-size:1rem;padding:0 3px;flex-shrink:0;}
+.add-btn{display:flex;align-items:center;gap:6px;background:none;border:2px dashed var(--border);border-radius:6px;padding:8px 14px;color:#888;font-family:'Sora',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;width:100%;justify-content:center;margin-top:7px;transition:all .2s;}
+.add-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+/* ===== PREVIEW TABLE ===== */
+.prev-table{width:100%;border-collapse:collapse;font-family:'Source Serif 4',serif;font-size:.86rem;}
+.prev-table td{border:1px solid #aaa;padding:7px 11px;vertical-align:top;}
+.prev-table .lbl{background:#f0ede3;font-weight:700;width:28%;font-size:.8rem;}
+.prev-table .hd{background:var(--accent);color:#fff;font-weight:700;text-align:center;font-size:.88rem;padding:9px;}
+
+/* ===== CHECKLIST ===== */
+.checklist{display:flex;flex-direction:column;gap:7px;margin-top:12px;}
+.chk-item{display:flex;align-items:center;gap:9px;padding:8px 12px;border-radius:6px;border:1.5px solid var(--border);background:#fff;font-size:.82rem;}
+.chk-item input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent2);cursor:default;flex-shrink:0;}
+.chk-tag{font-size:.7rem;font-weight:700;padding:2px 7px;border-radius:8px;background:#e8f8ee;color:#196f3d;flex-shrink:0;margin-left:auto;}
+.chk-ok{border-color:#a9dfbf;background:#f0fff5;}
+.chk-warn{border-color:#f9c74f;background:#fffbf0;}
+
+/* ===== AI BOX ===== */
+.ai-box{background:linear-gradient(135deg,#eef2ff,#f0f9ff);border:1.5px solid #c5cae9;border-radius:8px;padding:14px 18px;margin:12px 0;overflow:visible;}
+.ai-box h4{color:#3949ab;font-size:.85rem;font-weight:700;margin-bottom:6px;}
+.ai-result{font-size:.85rem;color:#333;line-height:1.7;margin-top:9px;white-space:pre-wrap;word-break:break-word;overflow:visible;max-height:none;}
+.ai-result.loading{color:#888;font-style:italic;}
+.spinner{display:inline-block;width:13px;height:13px;border:2px solid #c5cae9;border-top-color:#3949ab;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:5px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ===== TABS ===== */
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:18px;}
+.tab{padding:9px 16px;font-size:.82rem;font-weight:600;cursor:pointer;color:#888;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .2s;}
+.tab:hover{color:var(--accent);}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.tab-panel{display:none;} .tab-panel.active{display:block;}
+
+/* ===== BUTTONS ===== */
+.btn-row{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap;}
+.btn{font-family:'Sora',sans-serif;font-weight:600;font-size:.88rem;padding:10px 24px;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:all .18s;}
+.btn-sec{background:#fff;border-color:var(--border);color:#666;}
+.btn-sec:hover{border-color:#888;}
+.btn-pri{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 3px 10px rgba(26,82,118,.22);}
+.btn-pri:hover{background:#154360;transform:translateY(-1px);}
+.btn-suc{background:var(--accent2);color:#fff;border-color:var(--accent2);box-shadow:0 3px 10px rgba(30,132,73,.22);}
+.btn-suc:hover{background:#196f3d;transform:translateY(-1px);}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important;}
+.status-msg{text-align:center;font-size:.88rem;font-style:italic;min-height:20px;margin-top:9px;color:var(--accent);}
+.status-msg.err{color:var(--accent3);}
+
+/* ===== ALERT BOX ===== */
+.alert-info{background:#e8f4fd;border:1px solid #aed6f1;border-radius:6px;padding:10px 14px;font-size:.82rem;color:#1a5276;margin-bottom:12px;}
+.alert-warn{background:#fef9e7;border:1px solid #f9e79f;border-radius:6px;padding:10px 14px;font-size:.82rem;color:#7d6608;margin-bottom:12px;}
+
+
+/* ===== SAVE/LOAD PLANO ===== */
+.save-bar{background:#fff;border:1.5px solid var(--border);border-radius:8px;padding:12px 18px;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;box-shadow:var(--shadow);}
+.save-bar-title{font-size:.8rem;font-weight:700;color:#5a5240;text-transform:uppercase;letter-spacing:.04em;flex:1;}
+.btn-save{background:#6c3483;color:#fff;border-color:#6c3483;box-shadow:0 3px 10px rgba(108,52,131,.22);}
+.btn-save:hover{background:#512e5f;transform:translateY(-1px);}
+.btn-load{background:#117a65;color:#fff;border-color:#117a65;}
+.btn-load:hover{background:#0e6655;transform:translateY(-1px);}
+.save-toast{font-size:.8rem;color:#6c3483;font-style:italic;flex:1;text-align:right;}
+#savedPlanosList{display:none;background:#f8f9fa;border:1.5px solid var(--border);border-radius:8px;padding:14px;margin-top:8px;}
+.saved-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:6px;border:1.5px solid var(--border);background:#fff;margin-bottom:7px;font-size:.82rem;}
+.saved-item-name{flex:1;font-weight:600;color:var(--ink);}
+.saved-item-date{font-size:.74rem;color:#888;}
+.saved-item-btns{display:flex;gap:5px;}
+
+
+/* ===== ADMIN PANEL ===== */
+#adminOverlay{display:none;position:fixed;inset:0;background:rgba(10,20,40,.92);z-index:9999;align-items:center;justify-content:center;}
+#adminOverlay.open{display:flex;}
+.admin-modal{background:#0f1923;border:2px solid #1a5276;border-radius:12px;padding:0;width:min(700px,96vw);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.7);font-family:'Sora',sans-serif;}
+.admin-header{background:linear-gradient(135deg,#1a5276,#0d3349);padding:20px 28px;display:flex;align-items:center;gap:12px;border-radius:10px 10px 0 0;}
+.admin-header h2{color:#fff;font-size:1.1rem;font-weight:700;flex:1;}
+.admin-header .admin-badge{background:#e74c3c;color:#fff;font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.06em;}
+.admin-body{padding:24px 28px;}
+.admin-section{margin-bottom:24px;padding:18px;background:#1a2535;border-radius:8px;border:1px solid #2c3e50;}
+.admin-section h3{color:#90caf9;font-size:.85rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.admin-field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
+.admin-field label{font-size:.74rem;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.04em;}
+.admin-field input{font-family:'Sora',sans-serif;font-size:.85rem;background:#0f1923;border:1.5px solid #2c3e50;border-radius:5px;padding:8px 12px;color:#fff;outline:none;width:100%;}
+.admin-field input:focus{border-color:#1a5276;box-shadow:0 0 0 3px rgba(26,82,118,.3);}
+.admin-status{font-size:.8rem;padding:8px 12px;border-radius:5px;margin-top:6px;}
+.admin-status.ok{background:#1e3a2a;color:#4caf50;border:1px solid #2e7d32;}
+.admin-status.err{background:#3a1e1e;color:#ef9a9a;border:1px solid #7d2e2e;}
+.admin-status.info{background:#1a2a3a;color:#90caf9;border:1px solid #1a5276;}
+.btn-admin{font-family:'Sora',sans-serif;font-weight:600;font-size:.82rem;padding:8px 18px;border-radius:5px;cursor:pointer;border:none;transition:all .18s;}
+.btn-admin-pri{background:#1a5276;color:#fff;}
+.btn-admin-pri:hover{background:#2471a3;}
+.btn-admin-dan{background:#922b21;color:#fff;}
+.btn-admin-dan:hover{background:#c0392b;}
+.btn-admin-sec{background:#2c3e50;color:#aaa;}
+.btn-admin-sec:hover{background:#34495e;color:#fff;}
+.admin-draft-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:5px;background:#0f1923;border:1px solid #2c3e50;margin-bottom:6px;font-size:.78rem;}
+.admin-draft-name{flex:1;color:#fff;font-weight:600;}
+.admin-draft-date{color:#888;font-size:.72rem;}
+
+/* ===== LOGIN OVERLAY ===== */
+#loginOverlay{display:none;position:fixed;inset:0;background:rgba(10,20,40,.97);z-index:10000;align-items:center;justify-content:center;flex-direction:column;}
+#loginOverlay.open{display:flex;}
+.login-box{background:#0f1923;border:2px solid #1a5276;border-radius:12px;padding:36px 40px;width:min(400px,92vw);text-align:center;}
+.login-box h2{color:#fff;font-size:1.2rem;font-weight:700;margin-bottom:6px;}
+.login-box p{color:#aaa;font-size:.82rem;margin-bottom:24px;}
+.login-box input{width:100%;font-family:'Sora',sans-serif;font-size:.88rem;background:#1a2535;border:1.5px solid #2c3e50;border-radius:6px;padding:10px 14px;color:#fff;outline:none;text-align:center;letter-spacing:.1em;margin-bottom:10px;}
+.login-box input:focus{border-color:#1a5276;}
+.login-err{color:#ef9a9a;font-size:.78rem;min-height:18px;margin-bottom:10px;}
+.login-skip{color:#555;font-size:.74rem;margin-top:16px;cursor:pointer;text-decoration:underline;}
+.login-skip:hover{color:#888;}
+
+@media(max-width:700px){
+  .form-row,.form-row.three,.dissect-grid{grid-template-columns:1fr;}
+  .card{padding:16px 14px;}
+  .bloom-row .br-verbs{display:none;}
+  .nav-steps{gap:2px;}
+  .nav-step{padding:4px 9px;font-size:.7rem;}
+}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-logo">📚 Sistema de Planejamento BNCC</div>
+  <div class="nav-steps" id="navSteps">
+    <div class="nav-step active" onclick="goTo(0)">1. Identificação</div>
+    <div class="nav-step" onclick="goTo(1)">2. Habilidade</div>
+    <div class="nav-step" onclick="goTo(2)">3. Conteúdo</div>
+    <div class="nav-step" onclick="goTo(3)">4. Metodologia</div>
+    <div class="nav-step" onclick="goTo(4)">5. Avaliação</div>
+    <div class="nav-step" onclick="goTo(5)">6. Revisão</div>
+  <!-- Botão admin — visível só quando logado como admin -->
+  <button id="btnAdminPanel" onclick="abrirAdmin()" style="display:none;background:rgba(231,76,60,.3);border:1.5px solid rgba(231,76,60,.6);color:#ffcdd2;border-radius:4px;padding:4px 10px;cursor:pointer;font-size:.78rem;white-space:nowrap;margin-left:8px;">🔐 Admin</button>
+  </div>
+</nav>
+
+<!-- ===== GEMINI CONFIG PANEL (hidden, admin only) ===== -->
+<div id="geminiConfigPanel" style="display:none;">
+  <input type="password" id="geminiKeyInput" style="display:none;" oninput="window.GEMINI_KEY=this.value;">
+</div>
+
+<!-- ===== LOGIN OVERLAY ===== -->
+<div id="loginOverlay">
+  <div class="login-box">
+    <div style="font-size:2.5rem;margin-bottom:8px;">🔐</div>
+    <h2>Sistema de Planejamento BNCC</h2>
+    <p>Digite o código de acesso para continuar</p>
+    <input type="password" id="loginInput" placeholder="••••••••" maxlength="30"
+      onkeydown="if(event.key==='Enter')tentarLogin()">
+    <div class="login-err" id="loginErr"></div>
+    <button class="btn-admin btn-admin-pri" style="width:100%;padding:10px;" onclick="tentarLogin()">Entrar →</button>
+    <div style="margin-top:10px;">
+      <span style="font-size:.74rem;color:#555;">Prof. Lafaiete Erkmann &nbsp;|&nbsp; © Todos os direitos reservados</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ADMIN OVERLAY ===== -->
+<div id="adminOverlay">
+  <div class="admin-modal">
+    <div class="admin-header">
+      <span style="font-size:1.4rem;">🔐</span>
+      <h2>Painel Administrativo</h2>
+      <span class="admin-badge">ADMIN</span>
+      <button onclick="fecharAdmin()" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:1.2rem;margin-left:8px;">✕</button>
+    </div>
+    <div class="admin-body">
+
+      <!-- Chave IA -->
+      <div class="admin-section">
+        <h3>🔑 Chave da API Gemini (IA)</h3>
+        <div class="admin-field">
+          <label>Chave de API (AIza...)</label>
+          <input type="password" id="adminKeyInput" placeholder="Cole a chave aqui...">
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn-admin btn-admin-pri" onclick="adminSalvarChave()">✅ Salvar chave</button>
+          <button class="btn-admin btn-admin-sec" onclick="adminVerChave()">👁 Ver chave atual</button>
+          <button class="btn-admin btn-admin-dan" onclick="adminApagarChave()">🗑 Apagar chave</button>
+          <a href="https://aistudio.google.com/app/apikey" target="_blank" style="font-size:.74rem;color:#90caf9;align-self:center;">Obter chave gratuita →</a>
+        </div>
+        <div class="admin-status info" id="adminKeyStatus" style="display:none;"></div>
+      </div>
+
+      <!-- Rascunhos -->
+      <div class="admin-section">
+        <h3>💾 Gerenciar Rascunhos dos Professores</h3>
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+          <button class="btn-admin btn-admin-pri" onclick="adminListarRascunhos()">🔄 Atualizar lista</button>
+          <button class="btn-admin btn-admin-dan" onclick="adminApagarTodos()">🗑 Apagar TODOS</button>
+        </div>
+        <div id="adminDraftList"><div style="color:#555;font-size:.8rem;font-style:italic;">Clique em "Atualizar lista" para ver os rascunhos.</div></div>
+      </div>
+
+      <!-- Senha admin -->
+      <div class="admin-section">
+        <h3>🔒 Segurança</h3>
+        <div class="admin-field">
+          <label>Nova senha de admin</label>
+          <input type="password" id="adminNovaSenha" placeholder="Digite nova senha...">
+        </div>
+        <div class="admin-field">
+          <label>Confirmar nova senha</label>
+          <input type="password" id="adminConfSenha" placeholder="Repita a senha...">
+        </div>
+        <button class="btn-admin btn-admin-pri" onclick="adminTrocarSenha()">🔒 Alterar senha</button>
+        <div class="admin-status" id="adminSenhaStatus" style="display:none;"></div>
+      </div>
+
+      <!-- Info -->
+      <div style="font-size:.72rem;color:#555;text-align:center;margin-top:8px;">
+        © Prof. Lafaiete Erkmann — Sistema de Planejamento BNCC
+      </div>
+    </div>
+  </div>
+</div>
+<div class="pw">
+<div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:16%"></div></div>
+
+<!-- ===== SAVE BAR ===== -->
+<div class="save-bar">
+  <span class="save-bar-title">💾 Rascunho do Plano</span>
+  <button class="btn btn-save" onclick="salvarPlano()">💾 Salvar rascunho</button>
+  <button class="btn btn-load" onclick="toggleSavedList()">📂 Carregar rascunho</button>
+  <span class="save-toast" id="saveToast"></span>
+</div>
+<div id="savedPlanosList">
+  <div style="font-size:.8rem;font-weight:700;color:#555;margin-bottom:10px;">📋 Rascunhos salvos:</div>
+  <div id="savedItemsContainer"></div>
+  <div id="noSavedMsg" style="font-size:.82rem;color:#888;font-style:italic;">Nenhum rascunho salvo ainda.</div>
+</div>
+
+<!-- ===== PAGE 0: IDENTIFICAÇÃO ===== -->
+<div class="page active" id="page0">
+  <div class="card">
+    <div class="card-title"><span class="badge">1</span> Identificação do Plano</div>
+    <div class="form-row">
+      <div class="field"><label>Nome da Escola</label><input type="text" id="escola" value="CEJA DE LAGUNA"></div>
+      <div class="field"><label>Nome do Professor(a)</label><input type="text" id="professor" placeholder="Nome completo"></div>
+    </div>
+    <div class="form-row three">
+      <div class="field"><label>Turma / Etapa</label><input type="text" id="turma" placeholder="Ex: 1ª série EM / EJA 3ª Etapa"></div>
+      <div class="field"><label>Data de Início</label><input type="date" id="dataInicio"></div>
+      <div class="field"><label>Carga Horária (aulas)</label><input type="text" id="cargaHoraria" placeholder="Ex: 4 aulas — 2 por semana"></div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>Tema Gerador</label><input type="text" id="temaGerador" placeholder="Tema central da(s) habilidade(s)"></div>
+      <div class="field"><label>Contexto da Turma</label><input type="text" id="contexto" placeholder="Breve perfil dos estudantes"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="badge">📌</span> Área do Conhecimento</div>
+    <div class="area-grid" id="areaGrid">
+      <div class="area-chip" onclick="toggleArea(this,'Linguagens e suas Tecnologias')"><span>📖</span>Linguagens e suas Tecnologias</div>
+      <div class="area-chip" onclick="toggleArea(this,'Matemática e suas Tecnologias')"><span>🔢</span>Matemática e suas Tecnologias</div>
+      <div class="area-chip" onclick="toggleArea(this,'Ciências da Natureza e suas Tecnologias')"><span>🔬</span>Ciências da Natureza e suas Tecnologias</div>
+      <div class="area-chip" onclick="toggleArea(this,'Ciências Humanas e Sociais Aplicadas')"><span>🌍</span>Ciências Humanas e Sociais Aplicadas</div>
+      <div class="area-chip" onclick="toggleArea(this,'Formação Técnica e Profissional')"><span>⚙️</span>Formação Técnica e Profissional</div>
+    </div>
+    <div class="field" style="margin-top:12px;"><label>Componente(s) Curricular(es)</label><input type="text" id="componente" placeholder="Ex: Língua Portuguesa, Biologia, Física"></div>
+  </div>
+  <div class="btn-row"><button class="btn btn-pri" onclick="goTo(1)">Próximo: Habilidade →</button></div>
+</div>
+
+<!-- ===== PAGE 1: HABILIDADE ===== -->
+<div class="page" id="page1">
+  <div class="card">
+    <div class="card-title"><span class="badge">2</span> Seleção da Habilidade BNCC</div>
+    <div class="alert-info">🔎 Pesquise pelo <strong>código</strong> (ex: EM13CNT101) ou pelo <strong>verbo/tema</strong> da habilidade. A dissecção e o nível de Bloom serão carregados automaticamente.</div>
+
+    <div class="field" style="margin-bottom:14px;">
+      <label>Buscar Habilidade</label>
+      <div class="skill-selector-wrap">
+        <input type="text" class="skill-search" id="skillSearch" placeholder="Buscar por código, verbo ou tema... (ex: analisar, EM13CHS, linguagens)" oninput="filterSkills()" onfocus="openDropdown()" autocomplete="off">
+        <div class="skill-dropdown" id="skillDropdown"></div>
+      </div>
+    </div>
+
+    <div id="selectedSkillWrap" style="display:none;">
+      <div class="selected-skill-card">
+        <div class="sc-header">
+          <span class="sc-cod" id="sc-cod"></span>
+          <span class="sc-comp" id="sc-comp"></span>
+          <button onclick="clearSkill()" style="margin-left:auto;background:none;border:none;color:#c0392b;cursor:pointer;font-size:.8rem;font-weight:600;">✕ Trocar</button>
+        </div>
+        <div class="sc-texto" id="sc-texto"></div>
+        <div id="sc-bloom-badge"></div>
+      </div>
+
+      <div class="dissect-grid">
+        <div class="dc verb"><h4>🎯 O que precisa fazer (verbo)</h4><p id="dc-verb">—</p></div>
+        <div class="dc obj"><h4>📚 Com o quê / Sobre o quê</h4><p id="dc-obj">—</p></div>
+        <div class="dc purp"><h4>💡 Para quê (finalidade)</h4><p id="dc-purp">—</p></div>
+      </div>
+    </div>
+
+    <div id="noSkillWrap" style="margin-top:10px;">
+      <div class="alert-warn">⚠️ Nenhuma habilidade selecionada. Se a habilidade que você precisa não estiver na lista, pode digitar manualmente abaixo.</div>
+      <div class="form-row full" style="margin-top:10px;">
+        <div class="field"><label>Código da habilidade (manual)</label><input type="text" id="codManual" placeholder="Ex: EM13CNT101" oninput="updateManualHab()"></div>
+      </div>
+      <div class="form-row full">
+        <div class="field"><label>Texto completo da habilidade (manual)</label><textarea id="habManual" rows="4" placeholder="Cole aqui o texto completo da habilidade conforme a BNCC/CBTC..." oninput="updateManualHab()"></textarea></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="badge">🎓</span> Nível Cognitivo — Taxonomia de Bloom</div>
+    <p style="font-size:.82rem;color:#666;margin-bottom:12px;">A seleção da habilidade define automaticamente o nível. Confirme ou ajuste se necessário. <strong style="color:#c0392b;">Nunca troque o verbo da habilidade</strong> — isso muda a própria habilidade.</p>
+    <div class="bloom-levels">
+      <div class="bloom-row bl6-r" onclick="selectBloom(6)" id="brow6"><div class="br-num">6</div><div class="br-name">CRIAR</div><div class="br-desc">Combinar partes para formular algo novo</div><div class="br-verbs">criar, elaborar, planejar, produzir, construir, propor</div></div>
+      <div class="bloom-row bl5-r" onclick="selectBloom(5)" id="brow5"><div class="br-num">5</div><div class="br-name">AVALIAR</div><div class="br-desc">Julgar o valor de informações e ideias</div><div class="br-verbs">avaliar, julgar, justificar, defender, argumentar, criticar</div></div>
+      <div class="bloom-row bl4-r" onclick="selectBloom(4)" id="brow4"><div class="br-num">4</div><div class="br-name">ANALISAR</div><div class="br-desc">Segmentar informações em componentes e relações</div><div class="br-verbs">analisar, comparar, diferenciar, examinar, investigar</div></div>
+      <div class="bloom-row bl3-r" onclick="selectBloom(3)" id="brow3"><div class="br-num">3</div><div class="br-name">APLICAR</div><div class="br-desc">Aplicar fatos, conceitos, regras e ideias</div><div class="br-verbs">aplicar, calcular, resolver, demonstrar, usar, executar</div></div>
+      <div class="bloom-row bl2-r" onclick="selectBloom(2)" id="brow2"><div class="br-num">2</div><div class="br-name">COMPREENDER</div><div class="br-desc">Entender o que conceitos significam e como se relacionam</div><div class="br-verbs">explicar, resumir, classificar, interpretar, relacionar</div></div>
+      <div class="bloom-row bl1-r" onclick="selectBloom(1)" id="brow1"><div class="br-num">1</div><div class="br-name">LEMBRAR</div><div class="br-desc">Reconhecer e rememorar fatos e conceitos básicos</div><div class="br-verbs">listar, definir, nomear, reconhecer, recordar, enumerar</div></div>
+    </div>
+    <input type="hidden" id="bloomSel" value="">
+  </div>
+
+  <div class="ai-box">
+    <h4>⚡ Análise aprofundada da habilidade com IA</h4>
+    <p style="font-size:.8rem;color:#555;">A IA analisa a habilidade selecionada, confirma o nível de Bloom e alerta sobre erros comuns no planejamento.</p>
+    <div class="btn-row" style="margin-top:8px;justify-content:flex-start;">
+      <button class="btn btn-pri" onclick="analisarIA()" id="btnIA">🤖 Analisar com IA</button>
+    </div>
+    <div class="ai-result" id="iaResult"></div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-sec" onclick="goTo(0)">← Voltar</button>
+    <button class="btn btn-pri" onclick="goTo(2)">Próximo: Conteúdo →</button>
+  </div>
+</div>
+
+<!-- ===== PAGE 2: CONTEÚDO ===== -->
+<div class="page" id="page2">
+  <div class="card">
+    <div class="card-title"><span class="badge">3</span> Objeto de Conhecimento / Estudo</div>
+    <div class="alert-info">💡 O conteúdo é o <strong>meio</strong> para desenvolver a habilidade — não o fim. Escolha conteúdos que permitam ao aluno exercer exatamente a ação cognitiva exigida pelo verbo.</div>
+    <div class="form-row full"><div class="field"><label>Conteúdos / Objetos de Conhecimento</label><textarea id="conteudo" rows="5" placeholder="Liste os conteúdos que serão trabalhados para desenvolver a habilidade selecionada."></textarea></div></div>
+    <div class="form-row full"><div class="field"><label>Conexões Interdisciplinares (opcional)</label><textarea id="interdisc" rows="3" placeholder="Relacione com outras áreas ou componentes curriculares, se houver."></textarea></div></div>
+  </div>
+  <div class="ai-box">
+    <h4>⚡ Sugestão de conteúdos alinhados à habilidade</h4>
+    <div class="btn-row" style="margin-top:8px;justify-content:flex-start;">
+      <button class="btn btn-pri" onclick="sugerirConteudo()" id="btnCont">🤖 Sugerir conteúdos</button>
+    </div>
+    <div class="ai-result" id="iaCont"></div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-sec" onclick="goTo(1)">← Voltar</button>
+    <button class="btn btn-pri" onclick="goTo(3)">Próximo: Metodologia →</button>
+  </div>
+</div>
+
+<!-- ===== PAGE 3: METODOLOGIA ===== -->
+<div class="page" id="page3">
+  <div class="card">
+    <div class="card-title"><span class="badge">4</span> Caminho Metodológico</div>
+    <div class="alert-info">📌 A metodologia deve propor atividades que engajem o aluno no <strong>mesmo nível cognitivo</strong> do verbo da habilidade. Se a habilidade pede "analisar", a atividade deve de fato exigir análise.</div>
+    <div style="margin-bottom:14px;">
+      <div style="font-size:.78rem;font-weight:700;color:#5a5240;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;">Estratégias / Metodologias Ativas</div>
+      <div class="method-grid" id="methodGrid">
+        <div class="method-chip" onclick="toggleMethod(this)">Aula expositiva dialogada</div>
+        <div class="method-chip" onclick="toggleMethod(this)">Leitura e análise de textos</div>
+        <div class="method-chip" onclick="toggleMethod(this)">Resolução de problemas</div>
+        <div class="method-chip" onclick="toggleMethod(this)">Aprendizagem por projetos</div>
+        <div class="method-chip" onclick="toggleMethod(this)">Sala de aula invertida</div>
+        <div class="method-chip" onclick="toggleMethod(this)">Estudos de caso</div>
+        <div class="method-chip" onclick="toggleMethod(this)">Debate e argumentação</div>
+        <div class="method-chip" onclick="toggleMethod(this)">Trabalho colaborativo</div>
+        <div class="method-chip" onclick="toggleMethod(this)">Experimentação prática</div>
+        <div class="method-chip" onclick="toggleMethod(this)">Produção textual</div>
+        <div class="method-chip" onclick="toggleMethod(this)">Uso de tecnologias digitais</div>
+        <div class="method-chip" onclick="toggleMethod(this)">Mapa conceitual</div>
+        <div class="method-chip" onclick="toggleMethod(this)">Seminário / Apresentação</div>
+        <div class="method-chip" onclick="toggleMethod(this)">Pesquisa orientada</div>
+        <div class="method-chip" onclick="toggleMethod(this)">Gamificação</div>
+        <div class="method-chip" onclick="toggleMethod(this)">Júri simulado</div>
+      </div>
+    </div>
+    <div class="form-row full"><div class="field"><label>Descrição do caminho metodológico</label><textarea id="metodologia" rows="7" placeholder="Descreva as etapas da aula: momento inicial (ativação do conhecimento prévio), desenvolvimento das atividades e sistematização."></textarea></div></div>
+    <div class="form-row full"><div class="field"><label>Recursos Didáticos</label><input type="text" id="recursos" placeholder="Ex: Quadro, datashow, smartphones, textos impressos..."></div></div>
+  </div>
+  <div class="ai-box">
+    <h4>⚡ Sugerir roteiro metodológico alinhado ao nível cognitivo</h4>
+    <div class="btn-row" style="margin-top:8px;justify-content:flex-start;">
+      <button class="btn btn-pri" onclick="sugerirMet()" id="btnMet">🤖 Sugerir metodologia</button>
+    </div>
+    <div class="ai-result" id="iaMet"></div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-sec" onclick="goTo(2)">← Voltar</button>
+    <button class="btn btn-pri" onclick="goTo(4)">Próximo: Avaliação →</button>
+  </div>
+</div>
+
+<!-- ===== PAGE 4: AVALIAÇÃO ===== -->
+<div class="page" id="page4">
+  <div class="card">
+    <div class="card-title"><span class="badge">5</span> Critérios de Avaliação</div>
+    <div class="alert-warn">⚠️ <strong>Critérios vazios NÃO são aceitos pela SED.</strong> Evite: "progressão do pensamento crítico", "aplicação prática e conexões". Use verbos observáveis derivados da própria habilidade.</div>
+    <div class="criteria-list" id="criteriaList">
+      <div class="criteria-item"><input type="text" placeholder="Ex: Analisa situações do cotidiano envolvendo fenômenos elétricos"><button class="del-btn" onclick="removeCrit(this)">✕</button></div>
+    </div>
+    <button class="add-btn" onclick="addCrit()">+ Adicionar critério</button>
+    <div class="ai-box" style="margin-top:16px;">
+      <h4>⚡ Sugerir critérios baseados na habilidade</h4>
+      <div class="btn-row" style="margin-top:8px;justify-content:flex-start;">
+        <button class="btn btn-pri" onclick="sugerirCrit()" id="btnCrit">🤖 Sugerir critérios</button>
+      </div>
+      <div class="ai-result" id="iaCrit"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="badge">📝</span> Instrumentos de Avaliação</div>
+    <div class="method-grid" id="instrGrid">
+      <div class="method-chip" onclick="toggleInstr(this)">Resolução de situações-problema</div>
+      <div class="method-chip" onclick="toggleInstr(this)">Produção textual escrita</div>
+      <div class="method-chip" onclick="toggleInstr(this)">Apresentação oral</div>
+      <div class="method-chip" onclick="toggleInstr(this)">Atividade de análise</div>
+      <div class="method-chip" onclick="toggleInstr(this)">Mapa conceitual</div>
+      <div class="method-chip" onclick="toggleInstr(this)">Portfólio</div>
+      <div class="method-chip" onclick="toggleInstr(this)">Autoavaliação</div>
+      <div class="method-chip" onclick="toggleInstr(this)">Prova dissertativa</div>
+      <div class="method-chip" onclick="toggleInstr(this)">Rubrica</div>
+      <div class="method-chip" onclick="toggleInstr(this)">Observação sistemática</div>
+      <div class="method-chip" onclick="toggleInstr(this)">Relatório de atividade</div>
+      <div class="method-chip" onclick="toggleInstr(this)">Debate avaliativo</div>
+    </div>
+    <div class="form-row full" style="margin-top:12px;"><div class="field"><label>Complemento / Outros instrumentos</label><textarea id="instrCompl" rows="3" placeholder="Como os instrumentos serão usados para verificar o desenvolvimento da habilidade..."></textarea></div></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="badge">📚</span> Referências</div>
+    <div class="form-row full"><div class="field"><textarea id="referencias" rows="4" placeholder="Referências bibliográficas, sites e materiais utilizados..."></textarea></div></div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-sec" onclick="goTo(3)">← Voltar</button>
+    <button class="btn btn-pri" onclick="goTo(5)">Revisar Plano →</button>
+  </div>
+</div>
+
+<!-- ===== PAGE 5: REVISÃO ===== -->
+<div class="page" id="page5">
+  <div class="card">
+    <div class="card-title"><span class="badge">6</span> Revisão e Exportação</div>
+    <div class="tabs">
+      <div class="tab active" onclick="openTab('tabPrev')">👁 Pré-visualização</div>
+      <div class="tab" onclick="openTab('tabChk')">✅ Check-list SED</div>
+    </div>
+    <div class="tab-panel active" id="tabPrev">
+      <table class="prev-table" id="prevTable">
+        <tr><td colspan="2" class="hd">PLANO DE AULA</td></tr>
+        <tr><td class="lbl">Escola</td><td id="p_escola"></td></tr>
+        <tr><td class="lbl">Professor(a)</td><td id="p_prof"></td></tr>
+        <tr><td class="lbl">Área / Componente</td><td id="p_area"></td></tr>
+        <tr><td class="lbl">Tema Gerador</td><td id="p_tema"></td></tr>
+        <tr><td class="lbl">Turma / Etapa</td><td id="p_turma"></td></tr>
+        <tr><td class="lbl">Habilidade(s) — BNCC</td><td id="p_hab" style="font-style:italic;font-family:'Source Serif 4',serif;"></td></tr>
+        <tr><td class="lbl">Nível Cognitivo (Bloom)</td><td id="p_bloom"></td></tr>
+        <tr><td class="lbl">Objeto de Conhecimento</td><td id="p_cont"></td></tr>
+        <tr><td class="lbl">Caminho Metodológico</td><td id="p_met"></td></tr>
+        <tr><td class="lbl">Critérios de Avaliação</td><td id="p_crit"></td></tr>
+        <tr><td class="lbl">Instrumentos de Avaliação</td><td id="p_instr"></td></tr>
+        <tr><td class="lbl">Carga Horária</td><td id="p_carga"></td></tr>
+        <tr><td class="lbl">Referências</td><td id="p_ref"></td></tr>
+      </table>
+    </div>
+    <div class="tab-panel" id="tabChk">
+      <div class="checklist" id="checklistSED"></div>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-sec" onclick="goTo(4)">← Voltar</button>
+    <button class="btn btn-sec" onclick="updatePreview()">🔄 Atualizar</button>
+    <button class="btn btn-suc" onclick="exportDocx()" id="expBtn">⬇ Exportar .docx</button>
+  </div>
+  <div class="status-msg" id="st"></div>
+</div>
+
+</div><!-- end pw -->
+<script>
+// ===== HABILIDADES DB (104 habilidades BNCC EM13) =====
+// HABILIDADES_DB removido — dados carregados via API Cientificar
+var HABILIDADES_DB = [];
+// ===== STATE =====
+var ST = { areas:[], bloomLevel:0, methods:[], instrs:[], currentHab:null };
+var bloomNames = {1:'Lembrar',2:'Compreender',3:'Aplicar',4:'Analisar',5:'Avaliar',6:'Criar'};
+var bloomClasses = {1:'bl1-bg',2:'bl2-bg',3:'bl3-bg',4:'bl4-bg',5:'bl5-bg',6:'bl6-bg'};
+var focusedIdx = -1;
+
+// ===== NAV =====
+var pct = [16,33,50,66,83,100];
+function goTo(n){
+  document.querySelectorAll('.page').forEach(function(p,i){p.classList.toggle('active',i===n);});
+  document.querySelectorAll('.nav-step').forEach(function(s,i){s.classList.remove('active','done');if(i===n)s.classList.add('active');else if(i<n)s.classList.add('done');});
+  document.getElementById('progressFill').style.width=pct[n]+'%';
+  if(n===5)updatePreview();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ===== AREA =====
+function toggleArea(el,a){el.classList.toggle('selected');if(el.classList.contains('selected'))ST.areas.push(a);else ST.areas=ST.areas.filter(function(x){return x!==a;});}
+
+// ===== BLOOM =====
+function selectBloom(l){
+  document.querySelectorAll('.bloom-row').forEach(function(r){r.classList.remove('selected');});
+  var row=document.getElementById('brow'+l);
+  if(row)row.classList.add('selected');
+  ST.bloomLevel=l;
+  document.getElementById('bloomSel').value=l;
+}
+
+// ===== SKILL SELECTOR =====
+var filteredSkills = [];
+
+// ===== API CIENTIFICAR — BNCC =====
+var API_BASE = 'https://cientificar1992.pythonanywhere.com';
+var API_MEDIO_CACHE = null;   // cache completo do EM
+var filteredSkills = [];
+var focusedIdx = -1;
+
+// Mapeamento disciplina → slug da API
+var DISC_MAP = {
+  'linguagens':             'linguagens',
+  'matematica_medio':       'matematica_medio',
+  'ciencias_natureza':      'ciencias_natureza',
+  'ciencias_humanas':       'ciencias_humanas',
+  'lingua_portuguesa_medio':'lingua_portuguesa_medio',
+  'computacao_medio':       'computacao_medio'
+};
+
+// Mapeamento de área para exibição no card
+var AREA_LABEL = {
+  linguagens:             'Linguagens e suas Tecnologias',
+  matematica_medio:       'Matemática e suas Tecnologias',
+  ciencias_natureza:      'Ciências da Natureza e suas Tecnologias',
+  ciencias_humanas:       'Ciências Humanas e Sociais Aplicadas',
+  lingua_portuguesa_medio:'Língua Portuguesa',
+  computacao_medio:       'Computação'
+};
+
+var BLOOM_VERBS = {
+  1:['listar','definir','nomear','reconhecer','recordar','identificar','localizar','descrever'],
+  2:['explicar','resumir','classificar','interpretar','relacionar','comparar','compreender','reconhecer'],
+  3:['aplicar','calcular','resolver','demonstrar','usar','executar','praticar','empregar','utilizar'],
+  4:['analisar','comparar','diferenciar','examinar','investigar','selecionar','analisar e representar','analisar e estabelecer'],
+  5:['avaliar','julgar','justificar','defender','argumentar','criticar','propor e testar','avaliar e prever'],
+  6:['criar','elaborar','planejar','produzir','construir','propor','formular','mapear e criar']
+};
+
+function detectBloom(verbo){
+  var v = (verbo||'').toLowerCase();
+  for(var lvl=6; lvl>=1; lvl--){
+    for(var i=0;i<BLOOM_VERBS[lvl].length;i++){
+      if(v.startsWith(BLOOM_VERBS[lvl][i])||v.includes(BLOOM_VERBS[lvl][i])){return lvl;}
+    }
+  }
+  return 4; // padrão
+}
+
+function extractVerb(texto){
+  // Pega a primeira palavra (ou até vírgula/espaço) como verbo
+  var m = texto.match(/^([A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇÀÜ][a-záéíóúâêîôûãõçàü]+(?:\s+e\s+[a-záéíóúâêîôûãõçàü]+)?)/);
+  return m ? m[1] : texto.split(' ')[0];
+}
+
+function apiHabToLocal(cod, texto, comp, disciplina){
+  var verbo   = extractVerb(texto);
+  var bloom   = detectBloom(verbo);
+  // Objeto: tudo após a vírgula do verbo até "para" ou fim
+  var paraIdx = texto.toLowerCase().indexOf(', para ');
+  var objeto  = paraIdx > -1 ? texto.substring(verbo.length+2, paraIdx) : texto.substring(verbo.length+2);
+  var finalidade = paraIdx > -1 ? texto.substring(paraIdx+2) : '';
+  return {
+    cod: cod, area: disciplina, comp: comp||AREA_LABEL[disciplina]||'',
+    verbo: verbo, objeto: objeto.trim(), finalidade: finalidade.trim(),
+    bloom: bloom, texto: texto
+  };
+}
+
+// Carrega TODAS as disciplinas do EM de uma vez e faz cache
+async function carregarTudoMedio(){
+  if(API_MEDIO_CACHE) return API_MEDIO_CACHE;
+  var discs = Object.keys(DISC_MAP);
+  var todos = [];
+  // Carrega em paralelo
+  var promises = discs.map(function(disc){
+    return fetch(API_BASE+'/bncc_medio/disciplina/'+DISC_MAP[disc]+'/')
+      .then(function(r){return r.json();})
+      .then(function(data){
+        var comp = data.nome_disciplina || AREA_LABEL[disc] || disc;
+        (data.ano||[]).forEach(function(anoObj){
+          (anoObj.codigo_habilidade||[]).forEach(function(h){
+            todos.push(apiHabToLocal(h.nome_codigo, h.nome_habilidade, comp, disc));
+          });
+        });
+      })
+      .catch(function(e){console.warn('Erro ao carregar '+disc, e);});
+  });
+  await Promise.all(promises);
+  API_MEDIO_CACHE = todos;
+  return todos;
+}
+
+function renderDropdown(skills){
+  var dd = document.getElementById('skillDropdown');
+  if(!skills.length){
+    dd.innerHTML='<div style="padding:14px;text-align:center;color:#888;font-size:.85rem;">Nenhuma habilidade encontrada. Tente outro termo.</div>';
+    dd.classList.add('open');return;
+  }
+  var areaOrder = ['linguagens','lingua_portuguesa_medio','matematica_medio','ciencias_natureza','ciencias_humanas','computacao_medio'];
+  var areaLabels = AREA_LABEL;
+  var grouped = {};
+  areaOrder.forEach(function(a){grouped[a]=[];});
+  skills.forEach(function(h){if(grouped[h.area]!==undefined)grouped[h.area].push(h);else{if(!grouped['_outros'])grouped['_outros']=[];grouped['_outros'].push(h);}});
+  var html='';
+  areaOrder.forEach(function(a){
+    if(!grouped[a]||!grouped[a].length)return;
+    html+='<div class="skill-group-header">'+(areaLabels[a]||a)+'</div>';
+    grouped[a].forEach(function(h){
+      var bloomCls='b'+h.bloom;
+      html+='<div class="skill-option" onclick="selectSkill(\''+h.cod+'\')" data-cod="'+h.cod+'">';
+      html+='<span class="skill-cod">'+h.cod+'</span>';
+      html+='<span class="skill-verb">'+h.verbo+'</span>';
+      html+='<span class="bloom-badge bloom-mini '+bloomCls+'" style="float:right;">Bloom '+h.bloom+'</span>';
+      html+='<span class="skill-preview">'+h.texto.substring(0,90)+'...</span>';
+      html+='</div>';
+    });
+  });
+  dd.innerHTML=html;
+  dd.classList.add('open');
+}
+
+async function filterSkills(){
+  var q = document.getElementById('skillSearch').value.trim().toLowerCase();
+  var dd = document.getElementById('skillDropdown');
+
+  // Mostra loading
+  dd.innerHTML='<div style="padding:14px;text-align:center;color:#888;font-size:.85rem;"><span class="spinner"></span> Carregando habilidades da BNCC...</div>';
+  dd.classList.add('open');
+
+  try{
+    var all = await carregarTudoMedio();
+    if(!q){filteredSkills=all;renderDropdown(filteredSkills);return;}
+    filteredSkills = all.filter(function(h){
+      return h.cod.toLowerCase().includes(q)
+          || h.verbo.toLowerCase().includes(q)
+          || h.objeto.toLowerCase().includes(q)
+          || h.texto.toLowerCase().includes(q)
+          || h.comp.toLowerCase().includes(q);
+    });
+    renderDropdown(filteredSkills);
+  }catch(e){
+    dd.innerHTML='<div style="padding:14px;color:#c0392b;font-size:.85rem;">⚠️ Erro ao carregar API: '+e.message+'. Verifique sua conexão com a internet.</div>';
+    dd.classList.add('open');
+  }
+}
+
+async function openDropdown(){
+  if(!document.getElementById('skillDropdown').classList.contains('open')){
+    await filterSkills();
+  }
+}
+
+async function selectSkill(cod){
+  try{
+    var all = await carregarTudoMedio();
+    var h = all.find(function(x){return x.cod===cod;});
+    if(!h)return;
+    ST.currentHab = h;
+    document.getElementById('skillSearch').value = h.cod+' — '+h.verbo;
+    document.getElementById('skillDropdown').classList.remove('open');
+    document.getElementById('selectedSkillWrap').style.display='block';
+    document.getElementById('noSkillWrap').style.display='none';
+    // Fill card
+    document.getElementById('sc-cod').textContent=h.cod;
+    document.getElementById('sc-comp').textContent=h.comp;
+    // Highlight texto
+    var texto = h.texto;
+    var highlighted = texto;
+    var paraIdx = texto.toLowerCase().indexOf(' para ');
+    var verbPart = h.verbo;
+    if(verbPart){
+      var re = new RegExp('('+verbPart.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','i');
+      highlighted = highlighted.replace(re,'<span class="verb-hl">$1</span>');
+    }
+    if(paraIdx>-1){
+      var purpStr = texto.substring(paraIdx);
+      highlighted = highlighted.replace(purpStr,'<span class="purp-hl">'+purpStr+'</span>');
+    }
+    document.getElementById('sc-texto').innerHTML = highlighted;
+    // Bloom badge
+    var bloomNames2 = {1:'Lembrar',2:'Compreender',3:'Aplicar',4:'Analisar',5:'Avaliar',6:'Criar'};
+    var bloomClasses2 = {1:'bl1-bg',2:'bl2-bg',3:'bl3-bg',4:'bl4-bg',5:'bl5-bg',6:'bl6-bg'};
+    var bc = bloomClasses2[h.bloom]||'bl4-bg';
+    document.getElementById('sc-bloom-badge').innerHTML='<span class="bloom-badge-lg '+bc+'">📊 Nível '+h.bloom+' — '+(bloomNames2[h.bloom]||'')+'</span>';
+    // Dissection
+    document.getElementById('dc-verb').textContent = h.verbo;
+    document.getElementById('dc-obj').textContent  = h.objeto;
+    document.getElementById('dc-purp').textContent = h.finalidade;
+    // Auto-select bloom
+    selectBloom(h.bloom);
+    // Auto-fill componente if empty
+    if(!document.getElementById('componente').value) document.getElementById('componente').value = h.comp;
+  }catch(e){alert('Erro ao carregar habilidade: '+e.message);}
+}
+
+function clearSkill(){
+  ST.currentHab=null;
+  document.getElementById('skillSearch').value='';
+  document.getElementById('selectedSkillWrap').style.display='none';
+  document.getElementById('noSkillWrap').style.display='block';
+  document.getElementById('skillDropdown').classList.remove('open');
+}
+
+// Close dropdown on outside click
+document.addEventListener('click',function(e){
+  var wrap = document.querySelector('.skill-selector-wrap');
+  if(wrap && !wrap.contains(e.target)) document.getElementById('skillDropdown').classList.remove('open');
+});
+
+// Manual hab
+function updateManualHab(){
+  var cod = document.getElementById('codManual').value.trim();
+  var texto = document.getElementById('habManual').value.trim();
+  if(cod||texto) ST.currentHab = {cod:cod,texto:texto,verbo:'',objeto:'',finalidade:'',bloom:0,comp:document.getElementById('componente').value};
+}
+
+// ===== METHODS / INSTRS =====
+function toggleMethod(el){el.classList.toggle('selected');}
+function toggleInstr(el){el.classList.toggle('selected');}
+function getMethods(){return Array.from(document.querySelectorAll('#methodGrid .method-chip.selected')).map(function(e){return e.textContent.trim();});}
+function getInstrs(){
+  var sel=Array.from(document.querySelectorAll('#instrGrid .method-chip.selected')).map(function(e){return e.textContent.trim();});
+  var c=document.getElementById('instrCompl').value.trim();
+  return sel.concat(c?[c]:[]).join(' • ');
+}
+
+// ===== CRITERIA =====
+function addCrit(){
+  var l=document.getElementById('criteriaList');
+  var d=document.createElement('div');d.className='criteria-item';
+  d.innerHTML='<input type="text" placeholder="Descreva um critério observável e alinhado ao verbo da habilidade"><button class="del-btn" onclick="removeCrit(this)">✕</button>';
+  l.appendChild(d);
+}
+function removeCrit(b){var i=b.parentElement;i.parentElement.removeChild(i);}
+function getCrits(){return Array.from(document.querySelectorAll('#criteriaList .criteria-item input')).map(function(i){return i.value.trim();}).filter(Boolean);}
+function setCrits(arr){
+  var c=document.getElementById('criteriaList');c.innerHTML='';
+  arr.forEach(function(t){var d=document.createElement('div');d.className='criteria-item';d.innerHTML='<input type="text" value="'+esc(t)+'"><button class="del-btn" onclick="removeCrit(this)">✕</button>';c.appendChild(d);});
+}
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// ===== TABS =====
+function openTab(id){
+  document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+  if(id==='tabChk')buildChecklist();
+}
+
+// ===== PREVIEW =====
+function getHabText(){
+  if(ST.currentHab){
+    var cod=ST.currentHab.cod?'('+ST.currentHab.cod+') ':'';
+    return cod+(ST.currentHab.texto||'');
+  }
+  var cod=document.getElementById('codManual').value.trim();
+  var t=document.getElementById('habManual').value.trim();
+  return (cod?'('+cod+') ':'')+t;
+}
+function updatePreview(){
+  var area=ST.areas.join(', ');
+  var comp=document.getElementById('componente').value;
+  var areaFull=[area,comp].filter(Boolean).join(' — ');
+  var bloom=ST.bloomLevel?'Nível '+ST.bloomLevel+' — '+bloomNames[ST.bloomLevel]:'—';
+  var crit=getCrits().map(function(c,i){return (i+1)+'. '+c;}).join('\n');
+  document.getElementById('p_escola').textContent=document.getElementById('escola').value||'—';
+  document.getElementById('p_prof').textContent=document.getElementById('professor').value||'—';
+  document.getElementById('p_area').textContent=areaFull||'—';
+  document.getElementById('p_tema').textContent=document.getElementById('temaGerador').value||'—';
+  document.getElementById('p_turma').textContent=document.getElementById('turma').value||'—';
+  document.getElementById('p_hab').textContent=getHabText()||'—';
+  document.getElementById('p_bloom').textContent=bloom;
+  document.getElementById('p_cont').textContent=document.getElementById('conteudo').value||'—';
+  document.getElementById('p_met').textContent=document.getElementById('metodologia').value||'—';
+  document.getElementById('p_crit').textContent=crit||'—';
+  document.getElementById('p_instr').textContent=getInstrs()||'—';
+  document.getElementById('p_carga').textContent=document.getElementById('cargaHoraria').value||'—';
+  document.getElementById('p_ref').textContent=document.getElementById('referencias').value||'—';
+}
+
+// ===== CHECKLIST =====
+function buildChecklist(){
+  var hab=getHabText();
+  var cont=document.getElementById('conteudo').value.trim();
+  var met=document.getElementById('metodologia').value.trim();
+  var crits=getCrits();
+  var instr=getInstrs();
+  var checks=[
+    {ok:!!ST.currentHab&&!!ST.currentHab.cod, label:'Habilidade selecionada da lista BNCC com código correto', tag:'Obrigatório'},
+    {ok:!!hab, label:'Texto completo da habilidade presente', tag:'Obrigatório'},
+    {ok:ST.bloomLevel>0, label:'Nível cognitivo de Bloom identificado', tag:'Alinhamento'},
+    {ok:!!cont, label:'Objeto de conhecimento / conteúdo definido', tag:'Obrigatório'},
+    {ok:cont.length>30, label:'Conteúdo detalhado e alinhado ao verbo da habilidade', tag:'Qualidade'},
+    {ok:!!met, label:'Caminho metodológico descrito', tag:'Obrigatório'},
+    {ok:met.length>80, label:'Metodologia propõe atividade no nível cognitivo correto', tag:'Alinhamento'},
+    {ok:crits.length>0, label:'Critérios de avaliação definidos', tag:'Obrigatório'},
+    {ok:crits.length>=2, label:'Pelo menos 2 critérios observáveis', tag:'Qualidade'},
+    {ok:!!instr, label:'Instrumento(s) de avaliação selecionado(s)', tag:'Obrigatório'},
+    {ok:!!document.getElementById('professor').value.trim(), label:'Nome do professor informado', tag:'Identificação'},
+    {ok:!!document.getElementById('turma').value.trim(), label:'Turma / etapa informada', tag:'Identificação'},
+    {ok:ST.areas.length>0, label:'Área do conhecimento selecionada', tag:'Identificação'},
+  ];
+  var html='';
+  checks.forEach(function(c){
+    var cls=c.ok?'chk-item chk-ok':'chk-item chk-warn';
+    var icon=c.ok?'✅':'⚠️';
+    html+='<div class="'+cls+'"><input type="checkbox" '+(c.ok?'checked':'')+' disabled><span style="flex:1;">'+icon+' '+c.label+'</span><span class="chk-tag">'+c.tag+'</span></div>';
+  });
+  document.getElementById('checklistSED').innerHTML=html;
+}
+
+// ===== AI =====
+var SYS='Você é um especialista em BNCC, CBTC, Ensino Fundamental (Anos Iniciais e Finais) e Ensino Médio, CBTC (Currículo Base do Território Catarinense) e Taxonomia de Bloom para todas as etapas da Educação Básica (Currículo Base do Território Catarinense) e Taxonomia de Bloom para o Ensino Médio e EJA. Regras invioláveis: 1) NUNCA troque o verbo da habilidade — ele define o nível cognitivo. 2) Os conteúdos devem contemplar explicitamente o VERBO da habilidade — pergunte-se: este conteúdo permite ao aluno exercer este verbo? 3) Ao sugerir conteúdos, sempre indique conexões interdisciplinares possíveis com outras áreas do EM quando pertinente. 4) O caminho metodológico deve integrar: o verbo + os conteúdos escolhidos + as estratégias/metodologias ativas selecionadas + o contexto EJA/EM, com 3 momentos: inicial (mobilização), desenvolvimento (prática no nível cognitivo do verbo) e sistematização. 5) Critérios de avaliação devem contemplar a aquisição/desenvolvimento da habilidade, derivados do verbo, observáveis e mensuráveis. 6) Instrumentos sugeridos devem ser coerentes com os critérios e com as estratégias escolhidas. 7) Critérios vagos NÃO são aceitos. Responda sempre em português do Brasil. Seja direto e prático.';
+
+// ===== GEMINI API =====
+var GEMINI_API_KEY = ''; // Cole sua chave aqui ou use campo abaixo
+// Modelos em ordem de preferência — tenta o próximo se der 429
+var GEMINI_MODELS = ['gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-2.5-flash', 'gemini-3-flash-preview'];
+var GEMINI_MODEL_IDX = 0; // índice atual
+
+async function callGemini(prompt, modelIdx){
+  if(modelIdx === undefined) modelIdx = GEMINI_MODEL_IDX;
+  var key = window.GEMINI_KEY || GEMINI_API_KEY;
+  if(!key) throw new Error('Chave da API Gemini não configurada. Clique em ⚙️ Configurar IA para inserir sua chave.');
+  var model = GEMINI_MODELS[modelIdx] || GEMINI_MODELS[0];
+  var url = 'https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent?key='+key;
+  var body = {
+    system_instruction:{parts:[{text: SYS}]},
+    contents:[{role:'user',parts:[{text:prompt}]}],
+    generationConfig:{maxOutputTokens:3000,temperature:0.7}
+  };
+  var r;
+  try { r = await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); }
+  catch(e) { throw new Error('Erro de conexão com a API Gemini. Verifique sua internet e se a chave está correta.'); }
+  // Se 429, tenta o próximo modelo automaticamente
+  if(r.status === 429){
+    var nextIdx = modelIdx + 1;
+    if(nextIdx < GEMINI_MODELS.length){
+      console.warn('Modelo '+model+' com cota esgotada, tentando '+GEMINI_MODELS[nextIdx]+'...');
+      GEMINI_MODEL_IDX = nextIdx;
+      // Aguarda 2s antes de tentar novamente
+      await new Promise(function(res){setTimeout(res,2000);});
+      return callGemini(prompt, nextIdx);
+    }
+    // Todos os modelos esgotados — espera 60s e tenta do início
+    GEMINI_MODEL_IDX = 0;
+    throw new Error('Limite de requisições atingido em todos os modelos. Aguarde 1 minuto e tente novamente.');
+  }
+  var d = await r.json();
+  if(d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts)
+    return d.candidates[0].content.parts.map(function(p){return p.text||'';}).join('');
+  if(d.error) throw new Error('Gemini ('+model+'): '+d.error.message);
+  throw new Error('Resposta inesperada da API Gemini');
+}
+
+function habInfo(){
+  var h=ST.currentHab;
+  if(h)return 'Código: '+h.cod+'\nEtapa/Ano: '+(h.ano||h.etapa||'Ensino Médio')+'\nComponente: '+(h.comp||'')+'\nHabilidade: '+h.texto+'\nNível de Bloom: '+ST.bloomLevel+' — '+bloomNames[ST.bloomLevel]+'\nVerbo: '+h.verbo;
+  return 'Código: '+(document.getElementById('codManual').value||'não informado')+'\nHabilidade: '+(document.getElementById('habManual').value||'não informada');
+}
+
+async function analisarIA(){
+  var b=document.getElementById('btnIA'),r=document.getElementById('iaResult');
+  if(!getHabText()){alert('Selecione ou digite uma habilidade primeiro.');return;}
+  b.disabled=true;r.className='ai-result loading';r.innerHTML='<span class="spinner"></span>Analisando...';
+  try{var t=await callGemini('Analise esta habilidade:\n\n'+habInfo()+'\n\nForneça:\n1. Verbos identificados e nível de Bloom confirmado\n2. O que o aluno precisa FAZER (ação cognitiva)\n3. Sobre o quê / com o quê\n4. Para quê (finalidade)\n5. Alertas sobre erros comuns no planejamento desta habilidade\n\nSeja direto e técnico.');r.className='ai-result';r.innerHTML=t.replace(/\n/g,'<br>');}
+  catch(e){r.className='ai-result loading';r.innerHTML='⚠️ '+e.message;}
+  b.disabled=false;
+}
+
+async function sugerirConteudo(){
+  var b=document.getElementById('btnCont'),r=document.getElementById('iaCont');
+  if(!getHabText()){alert('Selecione a habilidade primeiro.');return;}
+  b.disabled=true;r.className='ai-result loading';r.innerHTML='<span class="spinner"></span>Sugerindo...';
+  try{
+    var tema2=document.getElementById('temaGerador').value.trim();
+    var turma2=document.getElementById('turma').value.trim();
+    var p=habInfo()+'\nTema gerador: '+(tema2||'não informado')+'\nTurma: '+(turma2||'não informado')+'\n\nSugira 5 a 8 objetos de conhecimento (conteúdos) que sejam MEIOS para o aluno exercer o VERBO desta habilidade.\nPara cada conteúdo:\n- Explique brevemente como ele permite ao aluno exercer o verbo (não apenas o tema).\n- Indique conexões interdisciplinares possíveis com outras áreas/componentes do EM (Língua Portuguesa, História, Matemática, Arte, Filosofia etc.) quando pertinente.\nFormate como lista numerada.';
+    var t=await callGemini(p);r.className='ai-result';r.innerHTML=t.replace(/\n/g,'<br>');if(!document.getElementById('conteudo').value)document.getElementById('conteudo').value=t;}
+  catch(e){r.className='ai-result loading';r.innerHTML='⚠️ '+e.message;}
+  b.disabled=false;
+}
+
+async function sugerirMet(){
+  var b=document.getElementById('btnMet'),r=document.getElementById('iaMet');
+  if(!getHabText()){alert('Selecione a habilidade primeiro.');return;}
+  b.disabled=true;r.className='ai-result loading';r.innerHTML='<span class="spinner"></span>Elaborando roteiro...';
+  var cont=document.getElementById('conteudo').value.trim();
+  var turma=document.getElementById('turma').value.trim();
+  var tema=document.getElementById('temaGerador').value.trim();
+  try{
+    var metSel=Array.from(document.querySelectorAll('#methodGrid .method-chip.selected')).map(function(e){return e.textContent.trim();}).join(', ');
+    var p=habInfo()+'\nTema gerador: '+(tema||'não informado')+'\nTurma: '+(turma||'não informado')+'\nConteúdo/Objetos de conhecimento: '+(cont||'não especificado')+'\nEstratégias/Metodologias ativas selecionadas: '+(metSel||'não selecionadas')+'\n\nElabore o CAMINHO METODOLÓGICO integrando TODOS os elementos acima.\nEstrutura obrigatória em 3 momentos:\n1. MOMENTO INICIAL (mobilização/ativação): Como engajar o aluno e ativar conhecimentos prévios usando as estratégias selecionadas.\n2. MOMENTO DE DESENVOLVIMENTO: Atividades que EXIJAM do aluno o mesmo nível cognitivo do VERBO da habilidade, usando os conteúdos como meio e as metodologias ativas escolhidas. Seja específico sobre O QUE O ALUNO FAZ.\n3. MOMENTO DE SISTEMATIZAÇÃO: Como consolidar a aprendizagem e verificar se o aluno desenvolveu a habilidade.\nContexto: EJA/Ensino Médio. Máximo 4 parágrafos. Foco no que o ALUNO faz, não no professor.';
+    var t=await callGemini(p);r.className='ai-result';r.innerHTML=t.replace(/\n/g,'<br>');if(!document.getElementById('metodologia').value)document.getElementById('metodologia').value=t;}
+  catch(e){r.className='ai-result loading';r.innerHTML='⚠️ '+e.message;}
+  b.disabled=false;
+}
+
+async function sugerirCrit(){
+  var b=document.getElementById('btnCrit'),r=document.getElementById('iaCrit');
+  if(!getHabText()){alert('Selecione a habilidade primeiro.');return;}
+  b.disabled=true;r.className='ai-result loading';r.innerHTML='<span class="spinner"></span>Elaborando critérios...';
+  try{
+    var met2=document.getElementById('metodologia').value.trim();
+    var cont2=document.getElementById('conteudo').value.trim();
+    var instrSel=Array.from(document.querySelectorAll('#instrGrid .method-chip.selected')).map(function(e){return e.textContent.trim();});
+    var instrDisp=['Resolução de situações-problema','Produção textual escrita','Apresentação oral','Atividade de análise','Mapa conceitual','Portfólio','Autoavaliação','Prova dissertativa','Rubrica','Observação sistemática','Relatório de atividade','Debate avaliativo'];
+    var p=habInfo()+'\nConteúdos definidos: '+(cont2||'não especificado')+'\nCaminho metodológico: '+(met2||'não descrito')+'\nInstrumentos já selecionados: '+(instrSel.length?instrSel.join(', '):'nenhum')+'\nInstrumentos disponíveis no sistema: '+instrDisp.join(', ')+'\n\nCom base em TUDO acima, elabore:\n\nPARTE 1 — CRITÉRIOS DE AVALIAÇÃO (4 critérios)\nRegras: cada critério começa com verbo derivado do verbo da habilidade, é observável e contempla a AQUISIÇÃO/DESENVOLVIMENTO da habilidade. NUNCA use: "demonstrar progressão", "mostrar envolvimento", "aplicação prática e conexões".\nFormato: verbo na 3ª pessoa do singular. Ex: "Analisa situações do cotidiano identificando fenômenos elétricos".\nRetorne os 4 critérios, um por linha, com prefixo CRIT:.\n\nPARTE 2 — INSTRUMENTOS RECOMENDADOS\nDos instrumentos disponíveis no sistema, indique quais são mais adequados para estes critérios e metodologia. Justifique brevemente cada indicação.\nRetorne com prefixo INSTR:';
+    var t=await callGemini(p);
+    r.className='ai-result';r.innerHTML=t.replace(/\n/g,'<br>');
+    var lines=t.split('\n');
+    var crits=lines.filter(function(l){return l.match(/^CRIT:/i);}).map(function(l){return l.replace(/^CRIT:/i,'').replace(/^[\d\.\-\•\*\s]+/,'').trim();}).filter(function(l){return l.length>5;});
+    if(crits.length)setCrits(crits);}
+  catch(e){r.className='ai-result loading';r.innerHTML='⚠️ '+e.message;}
+  b.disabled=false;
+}
+
+// ===== SALVAR / CARREGAR PLANO =====
+function coletarEstado(){
+  return {
+    v: 2,
+    savedAt: new Date().toISOString(),
+    escola: document.getElementById('escola').value,
+    professor: document.getElementById('professor').value,
+    turma: document.getElementById('turma').value,
+    dataInicio: document.getElementById('dataInicio').value,
+    cargaHoraria: document.getElementById('cargaHoraria').value,
+    temaGerador: document.getElementById('temaGerador').value,
+    contexto: document.getElementById('contexto').value,
+    componente: document.getElementById('componente').value,
+    areas: ST.areas.slice(),
+    bloomLevel: ST.bloomLevel,
+    currentHab: ST.currentHab,
+    codManual: document.getElementById('codManual').value,
+    habManual: document.getElementById('habManual').value,
+    conteudo: document.getElementById('conteudo').value,
+    interdisc: document.getElementById('interdisc').value,
+    metodologia: document.getElementById('metodologia').value,
+    recursos: document.getElementById('recursos').value,
+    criterios: getCrits(),
+    instrCompl: document.getElementById('instrCompl').value,
+    referencias: document.getElementById('referencias').value,
+    methodsSel: Array.from(document.querySelectorAll('#methodGrid .method-chip.selected')).map(function(e){return e.textContent.trim();}),
+    instrSel: Array.from(document.querySelectorAll('#instrGrid .method-chip.selected')).map(function(e){return e.textContent.trim();})
+  };
+}
+
+function restaurarEstado(s){
+  if(!s||s.v!==2)return false;
+  document.getElementById('escola').value=s.escola||'';
+  document.getElementById('professor').value=s.professor||'';
+  document.getElementById('turma').value=s.turma||'';
+  document.getElementById('dataInicio').value=s.dataInicio||'';
+  document.getElementById('cargaHoraria').value=s.cargaHoraria||'';
+  document.getElementById('temaGerador').value=s.temaGerador||'';
+  document.getElementById('contexto').value=s.contexto||'';
+  document.getElementById('componente').value=s.componente||'';
+  // Restaurar áreas
+  ST.areas=s.areas||[];
+  document.querySelectorAll('.area-chip').forEach(function(el){
+    var a=el.getAttribute('onclick').match(/'([^']+)'\)/);
+    if(a&&ST.areas.indexOf(a[1])>-1)el.classList.add('selected');
+    else el.classList.remove('selected');
+  });
+  // Restaurar habilidade
+  ST.currentHab=s.currentHab||null;
+  if(s.currentHab&&s.currentHab.cod){
+    selectSkill(s.currentHab.cod); // async — OK
+  } else {
+    document.getElementById('codManual').value=s.codManual||'';
+    document.getElementById('habManual').value=s.habManual||'';
+  }
+  // Bloom
+  if(s.bloomLevel)selectBloom(s.bloomLevel);
+  // Conteúdo
+  document.getElementById('conteudo').value=s.conteudo||'';
+  document.getElementById('interdisc').value=s.interdisc||'';
+  document.getElementById('metodologia').value=s.metodologia||'';
+  document.getElementById('recursos').value=s.recursos||'';
+  document.getElementById('instrCompl').value=s.instrCompl||'';
+  document.getElementById('referencias').value=s.referencias||'';
+  // Critérios
+  if(s.criterios&&s.criterios.length)setCrits(s.criterios);
+  // Métodos selecionados
+  var ms=s.methodsSel||[];
+  document.querySelectorAll('#methodGrid .method-chip').forEach(function(el){
+    if(ms.indexOf(el.textContent.trim())>-1)el.classList.add('selected');
+    else el.classList.remove('selected');
+  });
+  // Instrumentos selecionados
+  var is=s.instrSel||[];
+  document.querySelectorAll('#instrGrid .method-chip').forEach(function(el){
+    if(is.indexOf(el.textContent.trim())>-1)el.classList.add('selected');
+    else el.classList.remove('selected');
+  });
+  return true;
+}
+
+function getSavedPlanos(){
+  try{var d=localStorage.getItem('bncc_planos');return d?JSON.parse(d):[];}catch(e){return[];}
+}
+function setSavedPlanos(arr){
+  try{localStorage.setItem('bncc_planos',JSON.stringify(arr));}catch(e){}
+}
+
+function salvarPlano(){
+  var nome=document.getElementById('professor').value.trim()||'Professor';
+  var hab=getHabText();
+  var cod=ST.currentHab&&ST.currentHab.cod?ST.currentHab.cod:(document.getElementById('codManual').value.trim()||'');
+  var label=nome+(cod?' — '+cod:'')+(hab?' — '+hab.substring(0,40)+'...':'');
+  var planos=getSavedPlanos();
+  // Verifica se já existe rascunho do mesmo cod
+  var idx=-1;
+  if(cod)idx=planos.findIndex(function(p){return p.cod===cod&&p.prof===nome;});
+  var estado=coletarEstado();
+  estado.label=label;
+  estado.cod=cod;
+  estado.prof=nome;
+  if(idx>-1){planos[idx]=estado;}else{planos.unshift(estado);}
+  if(planos.length>10)planos=planos.slice(0,10);
+  setSavedPlanos(planos);
+  var t=document.getElementById('saveToast');
+  t.textContent='✅ Salvo! '+new Date().toLocaleString('pt-BR');
+  setTimeout(function(){t.textContent='';},4000);
+  renderSavedList();
+}
+
+function toggleSavedList(){
+  var el=document.getElementById('savedPlanosList');
+  el.style.display=el.style.display==='none'||!el.style.display?'block':'none';
+  renderSavedList();
+}
+
+function renderSavedList(){
+  var planos=getSavedPlanos();
+  var cont=document.getElementById('savedItemsContainer');
+  var noMsg=document.getElementById('noSavedMsg');
+  if(!planos.length){cont.innerHTML='';noMsg.style.display='block';return;}
+  noMsg.style.display='none';
+  cont.innerHTML=planos.map(function(p,i){
+    var dt=p.savedAt?new Date(p.savedAt).toLocaleString('pt-BR'):'';
+    return '<div class="saved-item">'+
+      '<span class="saved-item-name">'+esc(p.label||'Rascunho '+(i+1))+'</span>'+
+      '<span class="saved-item-date">'+dt+'</span>'+
+      '<div class="saved-item-btns">'+
+        '<button class="btn btn-pri" style="padding:4px 10px;font-size:.75rem;" onclick="carregarPlano('+i+')">📂 Abrir</button>'+
+        '<button class="btn" style="padding:4px 8px;font-size:.75rem;background:#e74c3c;color:#fff;border-color:#e74c3c;" onclick="deletarPlano('+i+')">🗑</button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function carregarPlano(idx){
+  var planos=getSavedPlanos();
+  if(!planos[idx])return;
+  if(!confirm('Carregar este rascunho? O que não foi salvo será perdido.'))return;
+  restaurarEstado(planos[idx]);
+  document.getElementById('savedPlanosList').style.display='none';
+  var t=document.getElementById('saveToast');
+  t.textContent='📂 Rascunho carregado!';
+  setTimeout(function(){t.textContent='';},3000);
+  goTo(0);
+}
+
+function deletarPlano(idx){
+  if(!confirm('Excluir este rascunho?'))return;
+  var planos=getSavedPlanos();
+  planos.splice(idx,1);
+  setSavedPlanos(planos);
+  renderSavedList();
+}
+
+// ===== EXPORT DOCX =====
+// Modelo fiel ao Plano_de_Aula_CEJA.docx
+// Tabela cabeçalho: cols [1845, 8498] total 10343
+// Tabela principal: cols [2520, 7830] total 10350
+// Margem: top:426 right:707 bottom:709 left:851
+// Labels originais: ver modelo oficial
+
+async function exportDocx(){
+  var st=document.getElementById('st'),btn=document.getElementById('expBtn');
+  st.className='status-msg';st.textContent='Gerando documento...';btn.disabled=true;
+  try{
+    var d=window.docx;
+    if(!d)throw new Error('Biblioteca docx não carregada. Aguarde o carregamento da página.');
+    var Document=d.Document,Packer=d.Packer,Paragraph=d.Paragraph,TextRun=d.TextRun;
+    var Table=d.Table,TableRow=d.TableRow,TableCell=d.TableCell,ImageRun=d.ImageRun;
+    var AlignmentType=d.AlignmentType,WidthType=d.WidthType,BorderStyle=d.BorderStyle;
+    var ShadingType=d.ShadingType,VerticalAlign=d.VerticalAlign,HeightRule=d.HeightRule;
+
+    // ── helpers ──
+    var brd={style:BorderStyle.SINGLE,size:6,color:'000000'};
+    var ab={top:brd,bottom:brd,left:brd,right:brd};
+    var B=function(t){return new TextRun({text:String(t||''),bold:true,font:'Arial',size:20,boldComplexScript:true});};
+    var N=function(t){return new TextRun({text:String(t||''),font:'Arial',size:20});};
+
+    // Célula rótulo (col esquerda) — fundo EEE8D8, bold, centralizado vertical
+    var LC=function(label){
+      return new TableCell({
+        width:{size:2520,type:WidthType.DXA},
+        borders:ab,
+        shading:{fill:'EEE8D8',type:ShadingType.CLEAR},
+        margins:{top:80,bottom:80,left:160,right:120},
+        verticalAlign:VerticalAlign.CENTER,
+        children:[new Paragraph({children:[B(label)]})]
+      });
+    };
+
+    // Célula valor (col direita) — quebra linha em \n
+    var VC=function(text){
+      var lines=(String(text||'')).split('\n');
+      var paras=lines.map(function(l){
+        return new Paragraph({
+          spacing:{before:0,after:40},
+          children:[N(l)]
+        });
+      });
+      if(!paras.length) paras=[new Paragraph({children:[N('')]})];
+      return new TableCell({
+        width:{size:7830,type:WidthType.DXA},
+        borders:ab,
+        margins:{top:80,bottom:80,left:120,right:120},
+        children:paras
+      });
+    };
+
+    // Linha da tabela principal com altura mínima
+    var TR=function(h,cells){
+      return new TableRow({height:{value:h,rule:HeightRule.AT_LEAST},children:cells});
+    };
+
+    // ── dados do formulário ──
+    var escola  = document.getElementById('escola').value||'';
+    var prof    = document.getElementById('professor').value||'';
+    var area    = ST.areas.join(', ');
+    var comp    = document.getElementById('componente').value||'';
+    var areaFull= [area,comp].filter(Boolean).join(' — ');
+    var tema    = document.getElementById('temaGerador').value||'';
+    var turma   = document.getElementById('turma').value||'';
+    var hab     = getHabText();
+    var cont    = document.getElementById('conteudo').value||'';
+    var crit    = getCrits().map(function(c,i){return (i+1)+'. '+c;}).join('\n');
+    var instr   = getInstrs();
+    var met     = document.getElementById('metodologia').value||'';
+    var carga   = document.getElementById('cargaHoraria').value||'';
+    var refs    = document.getElementById('referencias').value||'';
+
+    // ── logo via URL ──
+    var logoData;
+    try{
+      var logoResp=await fetch(window.LOGO_URL);
+      logoData=await logoResp.arrayBuffer();
+    }catch(e){
+      logoData=null;
+      console.warn('Logo não carregado:',e);
+    }
+
+    // ── cabeçalho: logo + dados institucionais ──
+    // Tabela: total 10343, cols [1845, 8498]
+    var headerCellLogo = new TableCell({
+      width:{size:1845,type:WidthType.DXA},
+      borders:ab,
+      margins:{top:60,bottom:60,left:60,right:60},
+      verticalAlign:VerticalAlign.CENTER,
+      children:[new Paragraph({
+        alignment:AlignmentType.CENTER,
+        children: logoData
+          ? [new ImageRun({data:logoData,transformation:{width:55,height:54},type:'png'})]
+          : [N('')]
+      })]
+    });
+
+    var headerCellInfo = new TableCell({
+      width:{size:8498,type:WidthType.DXA},
+      borders:ab,
+      margins:{top:60,bottom:60,left:120,right:120},
+      children:[
+        new Paragraph({alignment:AlignmentType.CENTER,children:[B('ESTADO DE SANTA CATARINA')]}),
+        new Paragraph({alignment:AlignmentType.CENTER,children:[B('SECRETARIA DE ESTADO DA EDUCAÇÃO')]}),
+        new Paragraph({alignment:AlignmentType.CENTER,children:[B('NOME DA ESCOLA: '+escola)]}),
+        new Paragraph({alignment:AlignmentType.CENTER,children:[B('PROFESSOR: '+prof)]})
+      ]
+    });
+
+    var headerTable = new Table({
+      width:{size:10343,type:WidthType.DXA},
+      columnWidths:[1845,8498],
+      rows:[new TableRow({children:[headerCellLogo,headerCellInfo]})]
+    });
+
+    // ── tabela principal (10 linhas do modelo original) ──
+    // Ordem e labels EXATOS do modelo .docx fornecido
+    var mainTable = new Table({
+      width:{size:10350,type:WidthType.DXA},
+      columnWidths:[2520,7830],
+      rows:[
+        TR(538, [LC('Área(s) do conhecimento/Componente curricular'), VC(areaFull)]),
+        TR(546, [LC('Tema Gerador'),                                   VC(tema)]),
+        TR(398, [LC('Turma/Etapa'),                                    VC(turma)]),
+        TR(559, [LC('Habilidade(s) selecionada(s)'),                   VC(hab)]),
+        TR(709, [LC('Objeto de conhecimento/estudo'),                  VC(cont)]),
+        TR(1144,[LC('Critério(s) de avaliação'),                       VC(crit)]),
+        TR(1144,[LC('Instrumento de avaliação'),                       VC(instr)]),
+        TR(570, [LC('Caminho metodológico'),                           VC(met)]),
+        TR(1095,[LC('Tempo de duração do plano'),                      VC(carga)]),
+        TR(1144,[LC('Referências'),                                    VC(refs)])
+      ]
+    });
+
+    // ── documento ──
+    var doc=new Document({
+      sections:[{
+        properties:{
+          page:{
+            size:{width:11906,height:16838},
+            // Margens do modelo: top:426 right:707 bottom:709 left:851
+            margin:{top:426,right:707,bottom:709,left:851}
+          }
+        },
+        children:[
+          headerTable,
+          new Paragraph({spacing:{before:80,after:40}}),
+          new Paragraph({
+            alignment:AlignmentType.CENTER,
+            spacing:{before:0,after:0},
+            children:[B('PLANO DE AULA')]
+          }),
+          new Paragraph({
+            alignment:AlignmentType.CENTER,
+            spacing:{before:0,after:60},
+            children:[new TextRun({text:'Sistema produzido por Prof. Lafaiete Erkmann — Todos os direitos reservados. Proibida reprodução sem autorização.',font:'Arial',size:14,color:'888888',italics:true})]
+          }),
+          new Paragraph({spacing:{before:40,after:0}}),
+          mainTable
+        ]
+      }]
+    });
+
+    var blob=await Packer.toBlob(doc);
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url;
+    a.download='Plano_'+(prof||'Plano').replace(/[^a-zA-Z0-9]/g,'_')+'.docx';
+    document.body.appendChild(a);a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    st.textContent='✅ Documento exportado com sucesso!';
+    setTimeout(function(){st.textContent='';},5000);
+
+  }catch(err){
+    console.error('exportDocx error:',err);
+    st.className='status-msg err';
+    st.textContent='Erro: '+err.message;
+  }
+  btn.disabled=false;
+}
+
+// ===== AUTH / ADMIN SYSTEM =====
+// Senha padrão do administrador — mude aqui ou pelo painel de segurança
+var ADMIN_CODE_DEFAULT = 'erkmann2025';
+function getAdminCode(){try{return localStorage.getItem('bncc_admin_code')||ADMIN_CODE_DEFAULT;}catch(e){return ADMIN_CODE_DEFAULT;}}
+var IS_ADMIN = false;
+
+function tentarLogin(){
+  var v = document.getElementById('loginInput').value.trim();
+  var err = document.getElementById('loginErr');
+  if(!v){err.textContent='Digite o código de acesso.';return;}
+  if(v === getAdminCode()){
+    // Login como ADMIN
+    IS_ADMIN = true;
+    document.getElementById('loginOverlay').classList.remove('open');
+    document.getElementById('btnAdminPanel').style.display='inline-block';
+    iniciarSistema();
+  } else if(v.length >= 3){
+    // Login como PROFESSOR (qualquer código com 3+ chars que não seja admin)
+    IS_ADMIN = false;
+    document.getElementById('loginOverlay').classList.remove('open');
+    document.getElementById('btnAdminPanel').style.display='none';
+    iniciarSistema();
+  } else {
+    err.textContent='Código inválido. Verifique com o administrador.';
+    document.getElementById('loginInput').value='';
+    document.getElementById('loginInput').focus();
+  }
+}
+
+function iniciarSistema(){
+  // Carrega chave da IA de forma transparente para professores
+  try{
+    var k=localStorage.getItem('gemini_api_key');
+    if(k){window.GEMINI_KEY=k;}
+  }catch(e){}
+  document.getElementById('dataInicio').value=new Date().toISOString().split('T')[0];
+  filterSkills();
+}
+
+// ── PAINEL ADMIN ─────────────────────────────────────────────────────────────
+function abrirAdmin(){
+  if(!IS_ADMIN){return;}
+  var k=localStorage.getItem('gemini_api_key')||'';
+  document.getElementById('adminKeyInput').value=k?'(chave salva — oculta por segurança)':'';
+  document.getElementById('adminOverlay').classList.add('open');
+  adminListarRascunhos();
+}
+
+function fecharAdmin(){
+  document.getElementById('adminOverlay').classList.remove('open');
+  document.getElementById('adminKeyStatus').style.display='none';
+}
+
+function adminSalvarChave(){
+  var k=document.getElementById('adminKeyInput').value.trim();
+  if(!k||k.startsWith('(chave salva')){
+    adminStatus('adminKeyStatus','err','Digite a chave no campo primeiro.');return;
+  }
+  if(!k.startsWith('AIza')){
+    adminStatus('adminKeyStatus','err','Chave inválida — deve começar com "AIza".');return;
+  }
+  window.GEMINI_KEY=k;
+  try{localStorage.setItem('gemini_api_key',k);}catch(e){}
+  document.getElementById('adminKeyInput').value='(chave salva — oculta por segurança)';
+  adminStatus('adminKeyStatus','ok','✅ Chave salva com sucesso! A IA está ativa para todos os professores.');
+}
+
+function adminVerChave(){
+  var k=localStorage.getItem('gemini_api_key')||'';
+  if(!k){adminStatus('adminKeyStatus','err','Nenhuma chave configurada.');return;}
+  adminStatus('adminKeyStatus','info','Chave atual: '+k.substring(0,8)+'••••••••'+k.substring(k.length-4));
+}
+
+function adminApagarChave(){
+  if(!confirm('Apagar a chave de IA? Os professores não conseguirão usar a IA até você configurar uma nova.'))return;
+  window.GEMINI_KEY='';
+  try{localStorage.removeItem('gemini_api_key');}catch(e){}
+  document.getElementById('adminKeyInput').value='';
+  adminStatus('adminKeyStatus','err','🗑 Chave removida. A IA está desativada.');
+}
+
+function adminListarRascunhos(){
+  var planos=getSavedPlanos();
+  var el=document.getElementById('adminDraftList');
+  if(!planos.length){el.innerHTML='<div style="color:#555;font-size:.8rem;font-style:italic;">Nenhum rascunho salvo.</div>';return;}
+  el.innerHTML=planos.map(function(p,i){
+    var dt=p.savedAt?new Date(p.savedAt).toLocaleString('pt-BR'):'';
+    return '<div class="admin-draft-item">'+
+      '<span class="admin-draft-name">'+esc(p.label||'Rascunho '+(i+1))+'</span>'+
+      '<span class="admin-draft-date">'+dt+'</span>'+
+      '<button class="btn-admin btn-admin-pri" style="font-size:.7rem;padding:3px 8px;" onclick="adminCarregarRascunho('+i+')">📂 Abrir</button>'+
+      '<button class="btn-admin btn-admin-dan" style="font-size:.7rem;padding:3px 8px;" onclick="adminDeletarRascunho('+i+')">🗑</button>'+
+    '</div>';
+  }).join('');
+}
+
+function adminCarregarRascunho(idx){
+  if(!confirm('Carregar este rascunho no sistema? O conteúdo atual não salvo será perdido.'))return;
+  var planos=getSavedPlanos();
+  if(!planos[idx])return;
+  restaurarEstado(planos[idx]);
+  fecharAdmin();
+  goTo(0);
+}
+
+function adminDeletarRascunho(idx){
+  if(!confirm('Excluir este rascunho permanentemente?'))return;
+  var planos=getSavedPlanos();
+  planos.splice(idx,1);
+  setSavedPlanos(planos);
+  adminListarRascunhos();
+}
+
+function adminApagarTodos(){
+  if(!confirm('Apagar TODOS os rascunhos salvos? Esta ação não pode ser desfeita.'))return;
+  setSavedPlanos([]);
+  adminListarRascunhos();
+}
+
+function adminTrocarSenha(){
+  var n1=document.getElementById('adminNovaSenha').value.trim();
+  var n2=document.getElementById('adminConfSenha').value.trim();
+  if(!n1||n1.length<4){adminStatus('adminSenhaStatus','err','A senha deve ter pelo menos 4 caracteres.');return;}
+  if(n1!==n2){adminStatus('adminSenhaStatus','err','As senhas não coincidem.');return;}
+  try{localStorage.setItem('bncc_admin_code',n1);}catch(e){}
+  document.getElementById('adminNovaSenha').value='';
+  document.getElementById('adminConfSenha').value='';
+  adminStatus('adminSenhaStatus','ok','✅ Senha alterada! Use a nova senha no próximo login.');
+}
+
+function adminStatus(id,tipo,msg){
+  var el=document.getElementById(id);
+  el.className='admin-status '+tipo;
+  el.textContent=msg;
+  el.style.display='block';
+  setTimeout(function(){el.style.display='none';},6000);
+}
+
+// Manter compatibilidade com função antiga
+function salvarChaveGemini(){adminSalvarChave();}
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded',function(){
+  // Mostrar tela de login
+  document.getElementById('loginOverlay').classList.add('open');
+  document.getElementById('loginInput').focus();
+  // Pré-carrega habilidades em background
+  carregarTudoMedio().catch(function(e){console.warn('Pre-load BNCC API falhou:',e);});
+});
+</script>
+
+<!-- ===== COPYRIGHT BAR ===== -->
+<div style="background:#0f1923;color:#aaa;text-align:center;padding:10px 20px;font-size:.72rem;font-family:'Sora',sans-serif;letter-spacing:.03em;border-top:2px solid #1a5276;margin-top:24px;">
+  ©️ <strong style="color:#fff;">Sistema de Planejamento BNCC</strong> — Produzido por <strong style="color:#90caf9;">Prof. Lafaiete Erkmann</strong> &nbsp;|&nbsp;
+  Todos os direitos reservados. Proibida a reprodução, distribuição ou comercialização sem autorização expressa do autor.
+</div>
+</body>
+</html>
