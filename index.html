@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Sistema BNCC com IA</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>📚 Sistema BNCC + IA</h1>
+
+<div class="box">
+  <label>Ano:</label>
+  <input id="ano" placeholder="Ex: 5º ano">
+
+  <label>Disciplina:</label>
+  <input id="disciplina" placeholder="Ex: Matemática">
+
+  <label>Buscar habilidade:</label>
+  <input id="busca" oninput="filtrar()" placeholder="Digite código ou texto">
+
+  <div id="lista"></div>
+</div>
+
+<div class="box">
+  <h3>Habilidade selecionada</h3>
+  <p id="codigo"></p>
+  <p id="texto"></p>
+
+  <button onclick="gerarPlano()">🤖 Gerar Plano com IA</button>
+  <p id="status"></p>
+</div>
+
+<div class="box">
+  <h3>Plano gerado</h3>
+
+  <textarea id="objetivo" placeholder="Objetivo"></textarea>
+  <textarea id="conteudo" placeholder="Conteúdo"></textarea>
+  <textarea id="metodologia" placeholder="Metodologia"></textarea>
+  <textarea id="atividade" placeholder="Atividade"></textarea>
+  <textarea id="avaliacao" placeholder="Avaliação"></textarea>
+  <textarea id="adaptacao" placeholder="TDAH"></textarea>
+  <textarea id="tarefa" placeholder="Tarefa"></textarea>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
