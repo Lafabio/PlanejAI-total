@@ -538,7 +538,7 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,san
 <div id="toast"></div>
 
 <!-- DOCX lib -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.min.js"></script>
+<script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
 
 <script>
 // ============================================================
@@ -1364,7 +1364,13 @@ function restaurarEstado(p) {
 // ============================================================
 //  EXPORTAR DOCX
 // ============================================================
-async function exportDocx() {
+  async function exportDocx() {
+  if (typeof docx === 'undefined') {
+    toast('❌ Biblioteca de exportação não carregou. Recarregue a página.', 'err');
+    return;
+  }
+  // ... resto do código
+  async function exportDocx() {
   var h = ST.currentHab;
   if (!h) { toast('Selecione uma habilidade antes de exportar.', 'err'); return; }
   toast('⏳ Gerando documento...', 'info');
@@ -1392,7 +1398,7 @@ async function exportDocx() {
 
     function infoRow(label, value) {
       return row([
-        cell(label, { bold: true, bg: 'eeeeee', size: 18, width: 2000 }),
+        cell(label, { bold: true, bg: 'eeeeee', size: 18, width: 5000 }),
         cell(value || '—', { size: 18 })
       ]);
     }
