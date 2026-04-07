@@ -478,9 +478,10 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,san
         <div class="checklist-grid" id="checklistSED"></div>
       </div>
 
-      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
         <button class="export-btn export-docx" onclick="exportDocx()">⬇️ Exportar .DOCX</button>
         <button class="btn btn-secondary btn-sm" onclick="salvarPlano()" style="width:auto;">💾 Salvar plano</button>
+        <button class="btn btn-secondary btn-sm" onclick="limparTela()" style="width:auto;border-color:var(--warn);color:var(--warn);">🧹 Limpar tudo</button>
       </div>
     </div>
   </div>
@@ -538,7 +539,19 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,san
 <div id="toast"></div>
 
 <!-- DOCX lib -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.min.js"></script>
+<script>
+// Carrega docx via CDN com fallback
+(function loadDocx(){
+  var s = document.createElement('script');
+  s.src = 'https://unpkg.com/docx@8.5.0/build/index.umd.js';
+  s.onerror = function(){
+    var s2 = document.createElement('script');
+    s2.src = 'https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js';
+    document.head.appendChild(s2);
+  };
+  document.head.appendChild(s);
+})();
+</script>
 
 <script>
 // ============================================================
@@ -1364,18 +1377,13 @@ function restaurarEstado(p) {
 // ============================================================
 //  EXPORTAR DOCX
 // ============================================================
-  async function exportDocx() {
-  if (typeof docx === 'undefined') {
-    toast('❌ Biblioteca de exportação não carregou. Recarregue a página.', 'err');
-    return;
-  }
-  // ... resto do código
-  async function exportDocx() {
+async function exportDocx() {
   var h = ST.currentHab;
   if (!h) { toast('Selecione uma habilidade antes de exportar.', 'err'); return; }
   toast('⏳ Gerando documento...', 'info');
   try {
-    var { Document, Packer, Paragraph, Table, TableRow, TableCell, TextRun, AlignmentType, WidthType, BorderStyle, HeadingLevel } = docx;
+    var _docx = window.docx || docx; if(!_docx){ toast('Biblioteca DOCX ainda carregando. Tente em 3 segundos.','err'); return; }
+    var { Document, Packer, Paragraph, Table, TableRow, TableCell, TextRun, AlignmentType, WidthType, BorderStyle, HeadingLevel } = _docx;
     var blooms = ['','Lembrar (N1)','Compreender (N2)','Aplicar (N3)','Analisar (N4)','Avaliar (N5)','Criar (N6)'];
 
     function cell(text, opts) {
@@ -1398,7 +1406,7 @@ function restaurarEstado(p) {
 
     function infoRow(label, value) {
       return row([
-        cell(label, { bold: true, bg: 'eeeeee', size: 18, width: 5000 }),
+        cell(label, { bold: true, bg: 'eeeeee', size: 18, width: 2000 }),
         cell(value || '—', { size: 18 })
       ]);
     }
@@ -1460,6 +1468,55 @@ var HABILIDADES_DB = [{"cod":"EI03CG01","etapa":"EI","ano":"Crianças pequenas (
 </script>
 
 <script>
+// ============================================================
+//  LIMPAR TELA
+// ============================================================
+function limparTela() {
+  if (!confirm('Limpar todos os campos do plano atual?')) return;
+  // Reset habilidade
+  ST.currentHab = null;
+  ST.bloomLevel = 0;
+  ST.straterias = [];
+  ST.areas = [];
+  ST.instrumentos = [];
+  // Reset campos texto
+  ['professor','turma','data_aula','tempo_aula','conteudo','metodologia','recursos'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  // Reset critérios
+  document.getElementById('critList').innerHTML = '';
+  // Reset botões Bloom
+  document.querySelectorAll('.bloom-btn').forEach(function(b){ b.classList.remove('sel'); });
+  // Reset estratégias
+  document.querySelectorAll('.strat-btn').forEach(function(b){ b.classList.remove('sel'); });
+  // Reset áreas
+  document.querySelectorAll('.area-btn').forEach(function(b){ b.classList.remove('sel'); });
+  // Reset habilidade selecionada
+  document.getElementById('selectedHab').style.display = 'none';
+  document.getElementById('habHeader').style.display = 'none';
+  // Reset filtros e dropdown
+  document.getElementById('filtEtapa').value = '';
+  document.getElementById('filtArea').value = '';
+  document.getElementById('filtBusca').value = '';
+  renderDropdown([]);
+  // Reset checklist
+  document.getElementById('checklistSED').innerHTML = '';
+  // Reset resultados IA
+  ['resIA','resConteudo','resMetodologia','resAvaliacao'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) { el.style.display = 'none'; el.innerHTML = ''; }
+  });
+  // Restaurar nome do professor da sessão
+  var s = getSession();
+  if (s && s.tipo === 'professor') {
+    var db = initDB();
+    var prof = db.professores[s.login];
+    if (prof) document.getElementById('professor').value = prof.nome;
+  }
+  toast('🧹 Plano limpo! Pronto para um novo.', 'ok');
+}
+
 // ============================================================
 //  INIT
 // ============================================================
