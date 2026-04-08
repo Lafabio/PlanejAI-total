@@ -280,7 +280,7 @@ body{background:#e8e5db;background-image:repeating-linear-gradient(0deg,transpar
           <button class="btn-admin btn-admin-dan" onclick="adminApagarChave()">🗑 Apagar chave</button>
           <a href="https://aistudio.google.com/app/apikey" target="_blank" style="font-size:.74rem;color:#90caf9;align-self:center;">Obter chave gratuita →</a>
         </div>
-        <div class="admin-status info" id="adminKeyStatus" style="display:none;"></div>
+        <div class="admin-status" id="adminStatus" style="display:none;"></div>
       </div>
 
       <div class="admin-section">
@@ -413,6 +413,67 @@ var bloomClasses = {1:'bl1-bg',2:'bl2-bg',3:'bl3-bg',4:'bl4-bg',5:'bl5-bg',6:'bl
 
 // ===== NAV =====
 var pct = [16,33,50,66,83,100];
+
+// ===== Funções auxiliares =====
+function toggleArea(el, area){
+  el.classList.toggle('active');
+  if(ST.areas.includes(area)){
+    ST.areas = ST.areas.filter(a => a !== area);
+  } else {
+    ST.areas.push(area);
+  }
+}
+
+function selectBloom(level){
+  ST.bloomLevel = level;
+  document.querySelectorAll('.bloom-chip').forEach(c => c.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+function getHabText(){
+  var sel = document.getElementById('skillSelect');
+  return sel ? sel.options[sel.selectedIndex]?.text || '' : '';
+}
+
+function getCrits(){
+  // Placeholder - implementar conforme necessidade
+  return [];
+}
+
+function getInstrs(){
+  // Placeholder - implementar conforme necessidade
+  return '';
+}
+
+function filterSkills(){
+  // Placeholder - implementar filtro de habilidades conforme necessidade
+  console.log('Filtrando habilidades...');
+}
+
+function updatePreview(){
+  // Atualiza pré-visualização do plano
+  document.getElementById('p_escola').textContent = document.getElementById('escola')?.value || '';
+  document.getElementById('p_prof').textContent = document.getElementById('professor')?.value || '';
+  document.getElementById('p_area').textContent = ST.areas.join(', ') + ' — ' + (document.getElementById('componente')?.value || '');
+  document.getElementById('p_tema').textContent = document.getElementById('temaGerador')?.value || '';
+  document.getElementById('p_turma').textContent = document.getElementById('turma')?.value || '';
+  document.getElementById('p_hab').textContent = getHabText();
+  document.getElementById('p_bloom').textContent = bloomNames[ST.bloomLevel] || '';
+  document.getElementById('p_cont').textContent = document.getElementById('conteudo')?.value || '';
+  document.getElementById('p_met').textContent = document.getElementById('metodologia')?.value || '';
+  document.getElementById('p_crit').textContent = getCrits().map((c,i) => (i+1)+'. '+c).join('\n');
+  document.getElementById('p_instr').textContent = getInstrs();
+  document.getElementById('p_carga').textContent = document.getElementById('cargaHoraria')?.value || '';
+  document.getElementById('p_ref').textContent = document.getElementById('referencias')?.value || '';
+}
+
+function openTab(tabId){
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+  event.target.classList.add('active');
+}
+
 function goTo(n){
   document.querySelectorAll('.page').forEach((p,i)=>p.classList.toggle('active',i===n));
   document.querySelectorAll('.nav-step').forEach((s,i)=>{s.classList.remove('active','done');if(i===n)s.classList.add('active');else if(i<n)s.classList.add('done');});
@@ -420,9 +481,6 @@ function goTo(n){
   if(n===5) updatePreview();
   window.scrollTo({top:0,behavior:'smooth'});
 }
-
-// ===== Funções auxiliares (toggleArea, selectBloom, skill selector, etc.) =====
-// (mantidas iguais ao original - cole aqui todas as funções que estavam no seu arquivo)
 
 // ===== SYS PROMPT =====
 var SYS = `Você é um especialista em BNCC, CBTC e Taxonomia de Bloom para o Ensino Médio e EJA. Regras invioláveis: 1) NUNCA troque o verbo da habilidade. 2) Conteúdos devem permitir exercer o verbo. ...`; // mantenha o SYS completo que você tinha
@@ -588,13 +646,173 @@ async function exportDocx(){
   btn.disabled = false;
 }
 
+// ===== SISTEMA DE LOGIN =====
+var ADMIN_SENHA = 'admin123'; // Senha padrão
+
+function tentarLogin(){
+  var input = document.getElementById('loginInput');
+  var err = document.getElementById('loginErr');
+  var valor = input.value.trim();
+  
+  if(!valor){
+    err.textContent = 'Digite o código de acesso';
+    return;
+  }
+  
+  // Verifica se a senha está correta
+  if(valor === ADMIN_SENHA){
+    // Login bem-sucedido
+    sessionStorage.setItem('usuarioLogado', 'true');
+    document.getElementById('loginOverlay').classList.remove('open');
+    err.textContent = '';
+    input.value = '';
+  } else {
+    err.textContent = 'Código de acesso inválido';
+    input.value = '';
+    input.focus();
+  }
+}
+
+function verificarLogin(){
+  // Verifica se já estava logado na sessão
+  return sessionStorage.getItem('usuarioLogado') === 'true';
+}
+
+function logout(){
+  sessionStorage.removeItem('usuarioLogado');
+  location.reload();
+}
+
+// ===== FUNÇÕES ADMINISTRATIVAS =====
+function abrirAdmin(){
+  document.getElementById('adminOverlay').classList.add('open');
+}
+
+function fecharAdmin(){
+  document.getElementById('adminOverlay').classList.remove('open');
+}
+
+function adminSalvarChave(){
+  var keyInput = document.getElementById('adminKeyInput');
+  var key = keyInput.value.trim();
+  var status = document.getElementById('adminStatus');
+  
+  if(!key){
+    status.style.display = 'block';
+    status.textContent = '⚠ Digite uma chave válida';
+    status.className = 'admin-status err';
+    return;
+  }
+  
+  localStorage.setItem('geminiApiKey', key);
+  window.GEMINI_KEY = key;
+  
+  status.style.display = 'block';
+  status.textContent = '✅ Chave salva com sucesso!';
+  status.className = 'admin-status ok';
+  keyInput.value = '';
+  
+  setTimeout(() => {
+    status.style.display = 'none';
+  }, 3000);
+}
+
+function adminVerChave(){
+  var key = localStorage.getItem('geminiApiKey') || window.GEMINI_KEY || '';
+  var status = document.getElementById('adminStatus');
+  
+  if(!key){
+    status.style.display = 'block';
+    status.textContent = '⚠ Nenhuma chave configurada';
+    status.className = 'admin-status err';
+  } else {
+    var masked = key.substring(0, 6) + '...' + key.substring(key.length - 4);
+    status.style.display = 'block';
+    status.textContent = '🔑 Chave atual: ' + masked;
+    status.className = 'admin-status';
+  }
+  
+  setTimeout(() => {
+    status.style.display = 'none';
+  }, 3000);
+}
+
+function adminApagarChave(){
+  localStorage.removeItem('geminiApiKey');
+  window.GEMINI_KEY = '';
+  
+  var status = document.getElementById('adminStatus');
+  status.style.display = 'block';
+  status.textContent = '🗑 Chave apagada!';
+  status.className = 'admin-status err';
+  
+  setTimeout(() => {
+    status.style.display = 'none';
+  }, 3000);
+}
+
+function adminTrocarSenha(){
+  var nova = document.getElementById('adminNovaSenha').value.trim();
+  var conf = document.getElementById('adminConfSenha').value.trim();
+  var status = document.getElementById('adminSenhaStatus');
+  
+  if(!nova || !conf){
+    status.style.display = 'block';
+    status.textContent = '⚠ Preencha todos os campos';
+    status.className = 'admin-status err';
+    return;
+  }
+  
+  if(nova !== conf){
+    status.style.display = 'block';
+    status.textContent = '⚠ As senhas não coincidem';
+    status.className = 'admin-status err';
+    return;
+  }
+  
+  if(nova.length < 4){
+    status.style.display = 'block';
+    status.textContent = '⚠ A senha deve ter pelo menos 4 caracteres';
+    status.className = 'admin-status err';
+    return;
+  }
+  
+  ADMIN_SENHA = nova;
+  localStorage.setItem('adminSenha', nova);
+  
+  status.style.display = 'block';
+  status.textContent = '✅ Senha alterada com sucesso!';
+  status.className = 'admin-status ok';
+  
+  document.getElementById('adminNovaSenha').value = '';
+  document.getElementById('adminConfSenha').value = '';
+  
+  setTimeout(() => {
+    status.style.display = 'none';
+  }, 3000);
+}
+
+// Carregar senha salva ao iniciar
+if(localStorage.getItem('adminSenha')){
+  ADMIN_SENHA = localStorage.getItem('adminSenha');
+}
+
 // ===== RESTANTE DO CÓDIGO (salvarPlano, IA functions, admin, etc.) =====
-// Cole aqui todas as outras funções do seu arquivo original (tentarLogin, adminSalvarChave, analisarIA, sugerirConteudo, etc.)
+// Cole aqui todas as outras funções do seu arquivo original (analisarIA, sugerirConteudo, etc.)
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', function(){
+  // Carrega chave da API salva
+  var savedKey = localStorage.getItem('geminiApiKey');
+  if(savedKey){
+    window.GEMINI_KEY = savedKey;
+    document.getElementById('adminKeyInput').value = savedKey;
+  }
+  
+  // Mostra tela de login
   document.getElementById('loginOverlay').classList.add('open');
   document.getElementById('loginInput').focus();
+  
   filterSkills();
 });
 </script>
